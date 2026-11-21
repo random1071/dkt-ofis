@@ -4,7 +4,9 @@ DKT Ofis — dil ve konuşma terapisti için ofis yönetim uygulaması (PWA): ta
 
 - **Tüm veriler kullanıcının cihazında**, uygulama şifresiyle AES-256 şifreli olarak (IndexedDB) saklanır. Bu depoda hiçbir danışan verisi, şifre veya anahtar **yoktur**; yalnızca uygulamanın kaynak kodu bulunur.
 - Sunucu, veritabanı, yapay zekâ servisi veya ücretli bağımlılık yoktur. İnternetsiz çalışır.
-- Yayın: `main` dalına her gönderimde GitHub Actions uygulamayı test eder, derler ve `gh-pages` dalına yayınlar.
+- Canlı adres: **https://dkt-ofis.malazgirt-batuhan.workers.dev** (Cloudflare Workers, yalnızca statik dosyalar; `wrangler.jsonc`). `main` dalına her gönderimde Cloudflare otomatik derleyip yayınlar. Güvenlik başlıkları `public/_headers` dosyasındadır.
+- `dkt-ofis.pages.dev` (Cloudflare Pages) de derlenir ancak pages.dev Türkiye'den erişilemediği için kullanılmaz.
+- GitHub Actions ayrıca testleri çalıştırıp `gh-pages` dalını üretir; GitHub Pages kapalıdır.
 
 ## Geliştirme
 
