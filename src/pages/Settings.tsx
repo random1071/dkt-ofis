@@ -377,7 +377,7 @@ function ChangePasswordForm() {
   const [a, setA] = useState('');
   const [b, setB] = useState('');
   async function go() {
-    if (a.length < 6) return toast('Yeni şifre en az 6 karakter olmalı.', 'error');
+    if (a.length < 8) return toast('Yeni şifre en az 8 karakter olmalı.', 'error');
     if (a !== b) return toast('Yeni şifreler aynı değil.', 'error');
     const ok = await changePassword(o, a);
     if (!ok) return toast('Mevcut şifre yanlış.', 'error');

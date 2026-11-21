@@ -16,7 +16,7 @@ import { ClientForm } from '../components/ClientForm';
 import { PackageDetail, PackageForm, PaymentDetail, PaymentForm, RefundForm } from '../components/FinanceForms';
 import { MessageDialog, NoteForm, TaskForm } from '../components/MiscForms';
 import {
-  attempt, Avatar, confirmDialog, Dropdown, Empty, matchText, navigate, openModal, PayBadge, Progress, SearchInput, Stat, Tabs, useRoute,
+  attempt, Avatar, confirmDialog, Dropdown, Empty, matchText, navigate, openModal, PayBadge, Progress, promptDialog, SearchInput, Stat, Tabs, useRoute,
 } from '../components/ui';
 import { describeSeries } from '../lib/schedule';
 
@@ -171,6 +171,7 @@ export function ClientDetailPage({ id }: { id: string }) {
             <h2 className="serif" style={{ fontSize: '1.9rem', lineHeight: 1.15 }}>{c.name}</h2>
             <div className="row wrap mt-2">
               {c.archived && <span className="badge">Arşivde</span>}
+              {c.anonymizedAt && <span className="badge violet">Anonimleştirildi</span>}
               {c.serviceCategory && <span className="badge accent">{c.serviceCategory}</span>}
               <span className="badge">{c.billingMode === 'package' ? 'Paket' : 'Seans başı'} · {fmtMoney(c.sessionFee)}</span>
               {c.needsFollowUp && <span className="badge info">Takip gerekiyor</span>}
@@ -203,6 +204,16 @@ export function ClientDetailPage({ id }: { id: string }) {
                       const ok = await confirmDialog({ title: 'Danışanı arşivle', message: <>Danışan listede gizlenir; randevu, ödeme ve paket geçmişi <b>silinmez</b> ve raporlarda yer almaya devam eder.{fut.length ? <><br /><br />{fut.length} gelecek planlı randevu iptal edilecek.</> : null}</>, confirmText: 'Arşivle' });
                       if (ok) attempt(() => A.archiveClient(c.id, true, true), 'Danışan arşivlendi');
                     }}><Archive /> Arşivle</button>
+                  )}
+                  {c.archived && !c.anonymizedAt && A.clientHasHistory(c.id) && (
+                    <button className="danger" onClick={async () => {
+                      cl();
+                      const ok = await confirmDialog({ title: 'Kişisel bilgileri kalıcı olarak sil (anonimleştir)', danger: true, confirmText: 'Devam et', message: <>Ad, telefon, e-posta, doğum tarihi, veli ve acil durum bilgileri, hizmet alanı, idari notlar, seans notları ve danışana bağlı notlar <b>kalıcı olarak silinir</b>; işlem geçmişindeki adı da "Anonim danışan" olarak değiştirilir. Muhasebe tutarlılığı için tutarlar ve tarihler korunur. <b>Geri alınamaz.</b><br /><br />Bu işlemden önce alınmış yedek dosyaları ve cihaz içi yedekler eski bilgileri içermeye devam eder; gerekirse onları da silin.</> });
+                      if (!ok) return;
+                      const w = await promptDialog({ label: 'Onay', message: 'Onaylamak için büyük harflerle SİL yazın.', required: true, confirmText: 'Kalıcı olarak anonimleştir' });
+                      if (w?.toLocaleUpperCase('tr') !== 'SİL') return;
+                      attempt(() => A.anonymizeClient(c.id), 'Danışanın kişisel bilgileri silindi');
+                    }}><Trash2 /> Kişisel bilgileri sil (KVKK)</button>
                   )}
                   {!A.clientHasHistory(c.id) && (
                     <button className="danger" onClick={async () => { cl(); if (await confirmDialog({ title: 'Kalıcı olarak sil', message: 'Bu danışanın hiç randevu/ödeme/paket kaydı yok. Kayıt kalıcı olarak silinecek.', confirmText: 'Sil', danger: true })) { const r = await attempt(() => A.deleteClient(c.id), 'Danışan silindi'); if (r !== undefined) navigate('/danisanlar'); } }}><Trash2 /> Kalıcı olarak sil</button>

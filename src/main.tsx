@@ -12,6 +12,13 @@ import { initAutoBackup } from './lib/backup';
 import { extendSeries, generateRecurringExpenses } from './lib/actions';
 import './lib/install';
 
+// Güvenlik: uygulama başka bir sayfanın içinde (iframe) çalıştırılamaz.
+// GitHub Pages meta CSP ile frame-ancestors desteklemediği için betikle engellenir.
+if (window.top !== window.self) {
+  document.body.innerText = 'Bu uygulama güvenlik nedeniyle başka bir sayfanın içinde açılamaz.';
+  throw new Error('framed');
+}
+
 initAutoBackup();
 // Açılışta: tekrarlayan randevuları ileri uzat, zamanı gelen düzenli giderleri ekle
 onUnlocked(async () => {

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ArrowRight, Copy, Eye, EyeOff, KeyRound, Lock, ShieldCheck, Sparkles, Download } from 'lucide-react';
 import { BrandMark } from '../components/Brand';
 import { enterDemo, setup, unlock, unlockWithRecovery } from '../lib/store';
@@ -18,6 +18,8 @@ function PasswordInput({ value, onChange, placeholder, autoFocus, id, onEnter }:
   );
 }
 
+export const MIN_PW = 8;
+
 function strength(pw: string) {
   let s = 0;
   if (pw.length >= 8) s++;
@@ -30,7 +32,7 @@ function strength(pw: string) {
 
 export function SetupScreen({ onBegin, onCode }: { onBegin: () => void; onCode: (code: string) => void }) {
   const [step, setStep] = useState(0);
-  const [therapistName, setTherapistName] = useState('Ezgi Gökçen Selağzı');
+  const [therapistName, setTherapistName] = useState('Ezgi');
   const [officeName, setOfficeName] = useState('Dil ve Konuşma Terapisi Ofisi');
   const [pw, setPw] = useState('');
   const [pw2, setPw2] = useState('');
@@ -39,7 +41,7 @@ export function SetupScreen({ onBegin, onCode }: { onBegin: () => void; onCode: 
   const labels = ['Çok zayıf', 'Zayıf', 'Orta', 'İyi', 'Güçlü'];
 
   async function create() {
-    if (pw.length < 6) return toast('Şifre en az 6 karakter olmalı.', 'error');
+    if (pw.length < MIN_PW) return toast(`Şifre en az ${MIN_PW} karakter olmalı.`, 'error');
     if (pw !== pw2) return toast('Şifreler aynı değil.', 'error');
     setBusy(true);
     onBegin();
@@ -81,7 +83,7 @@ export function SetupScreen({ onBegin, onCode }: { onBegin: () => void; onCode: 
         {step === 1 && (
           <div className="col gap-4 fade-in">
             <h1>Ofis bilgileri</h1>
-            <Field label="Adın"><input className="input" value={therapistName} onChange={(e) => setTherapistName(e.target.value)} /></Field>
+            <Field label="Adın" help="İsterseniz ad soyad yazın; yalnızca bu cihazda şifreli saklanır."><input className="input" value={therapistName} onChange={(e) => setTherapistName(e.target.value)} /></Field>
             <Field label="Ofis adı" help="Mesaj şablonlarında ve raporlarda görünür. Daha sonra Ayarlar'dan değiştirebilirsin.">
               <input className="input" value={officeName} onChange={(e) => setOfficeName(e.target.value)} />
             </Field>
@@ -96,7 +98,7 @@ export function SetupScreen({ onBegin, onCode }: { onBegin: () => void; onCode: 
           <div className="col gap-4 fade-in">
             <h1>Giriş şifresi</h1>
             <p className="small muted" style={{ lineHeight: 1.55 }}>Uygulamayı her açtığında bu şifreyi gireceksin. Kayıtların bu şifreyle şifrelenir; şifre hiçbir yere gönderilmez ve düz metin olarak saklanmaz.</p>
-            <Field label="Şifre" help={pw ? `Güç: ${labels[st]}` : 'En az 6 karakter; 8+ karakter ve rakam önerilir.'}>
+            <Field label="Şifre" help={pw ? `Güç: ${labels[st]}${pw.length < MIN_PW ? ` · en az ${MIN_PW} karakter` : ''}` : `En az ${MIN_PW} karakter; harf + rakam karışımı önerilir. Doğum tarihi gibi tahmin edilebilir şifreler kullanmayın.`}>
               <PasswordInput value={pw} onChange={setPw} autoFocus id="pw1" />
             </Field>
             {pw && <div className="progress"><div style={{ width: `${(st + 1) * 20}%`, background: st < 2 ? 'var(--danger)' : st < 3 ? 'var(--warn)' : 'var(--ok)' }} /></div>}
@@ -136,8 +138,37 @@ export function RecoveryCodeScreen({ code, onDone }: { code: string; onDone: () 
   );
 }
 
+// Hatalı şifre denemelerini yavaşlatır: 5 hatadan sonra 30 sn, her 5 hatada süre ikiye katlanır (en çok 15 dk).
+const FAIL_KEY = 'ezgi-lock-fails';
+function readFails(): { count: number; until: number } {
+  try {
+    return JSON.parse(localStorage.getItem(FAIL_KEY) || '') as { count: number; until: number };
+  } catch {
+    return { count: 0, until: 0 };
+  }
+}
+function writeFails(v: { count: number; until: number }) {
+  try { localStorage.setItem(FAIL_KEY, JSON.stringify(v)); } catch { /* yok say */ }
+}
+export function registerFailedUnlock() {
+  const f = readFails();
+  const count = f.count + 1;
+  let until = 0;
+  if (count >= 5 && count % 5 === 0) until = Date.now() + Math.min(15 * 60, 30 * 2 ** (count / 5 - 1)) * 1000;
+  writeFails({ count, until: until || f.until });
+}
+export function clearFailedUnlock() {
+  try { localStorage.removeItem(FAIL_KEY); } catch { /* yok say */ }
+}
+
 export function LockScreen({ name }: { name?: string }) {
   const [pw, setPw] = useState('');
+  const [now, setNow] = useState(Date.now());
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, []);
+  const waitSec = Math.max(0, Math.ceil((readFails().until - now) / 1000));
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
   const [mode, setMode] = useState<'pw' | 'recover'>('pw');
@@ -146,25 +177,34 @@ export function LockScreen({ name }: { name?: string }) {
   const [npw2, setNpw2] = useState('');
 
   async function go() {
-    if (!pw) return;
+    if (!pw || waitSec > 0) return;
     setBusy(true);
     setErr('');
     const ok = await unlock(pw);
     setBusy(false);
     if (!ok) {
+      registerFailedUnlock();
       setErr('Şifre yanlış. Tekrar deneyin.');
       setPw('');
-    }
+      setNow(Date.now());
+    } else clearFailedUnlock();
   }
   async function recover() {
-    if (npw.length < 6) return setErr('Yeni şifre en az 6 karakter olmalı.');
+    if (npw.length < MIN_PW) return setErr(`Yeni şifre en az ${MIN_PW} karakter olmalı.`);
     if (npw !== npw2) return setErr('Yeni şifreler aynı değil.');
     setBusy(true);
     setErr('');
+    if (waitSec > 0) return;
     const ok = await unlockWithRecovery(code, npw);
     setBusy(false);
-    if (!ok) setErr('Kurtarma kodu hatalı.');
-    else toast('Yeni şifreniz kaydedildi');
+    if (!ok) {
+      registerFailedUnlock();
+      setErr('Kurtarma kodu hatalı.');
+      setNow(Date.now());
+    } else {
+      clearFailedUnlock();
+      toast('Yeni şifreniz kaydedildi');
+    }
   }
   const hour = new Date().getHours();
   const greet = hour < 12 ? 'Günaydın' : hour < 18 ? 'İyi günler' : 'İyi akşamlar';
@@ -179,10 +219,10 @@ export function LockScreen({ name }: { name?: string }) {
                 <h1>{greet}{name ? `, ${name.split(' ')[0]}` : ''}</h1>
                 <p className="muted small mt-2">Devam etmek için şifreni gir.</p>
               </div>
-              <Field error={err || undefined}>
+              <Field error={waitSec > 0 ? `Çok sayıda hatalı deneme. ${waitSec} saniye sonra tekrar deneyin.` : err || undefined}>
                 <PasswordInput value={pw} onChange={setPw} autoFocus placeholder="Şifre" onEnter={go} id="unlock-pw" />
               </Field>
-              <button className="btn primary lg block" disabled={busy || !pw} onClick={go} data-testid="unlock-btn"><Lock /> {busy ? 'Açılıyor…' : 'Kilidi aç'}</button>
+              <button className="btn primary lg block" disabled={busy || !pw || waitSec > 0} onClick={go} data-testid="unlock-btn"><Lock /> {busy ? 'Açılıyor…' : 'Kilidi aç'}</button>
               <button className="link-btn small" onClick={() => { setMode('recover'); setErr(''); }}>Şifremi unuttum</button>
             </>
           ) : (

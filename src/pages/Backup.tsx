@@ -93,9 +93,9 @@ export function BackupPage() {
             <button className="btn primary lg" onClick={() => attempt(async () => { const n = await exportBackupFile(); return n; }, 'Yedek dosyası indirildi')} data-testid="export-backup"><Download /> Yedek dosyasını indir</button>
             {canShareFiles() && <button className="btn" onClick={() => attempt(async () => { const ok = await shareBackupFile(); if (ok) toast('Yedek paylaşıldı'); return ok; })}><Share2 /> Paylaş / Dosyalar'a kaydet</button>}
             <button className="btn ghost sm" style={{ alignSelf: 'flex-start' }} onClick={async () => {
-              const pw = await promptDialog({ label: 'Farklı şifreyle yedek', message: 'Bu yedek dosyası yalnızca burada belirleyeceğiniz şifreyle açılabilir (uygulama şifresi ve kurtarma kodu çalışmaz). Şifreyi unutmayın.', placeholder: 'Yedek şifresi (en az 6 karakter)', required: true, confirmText: 'Yedeği indir' });
+              const pw = await promptDialog({ label: 'Farklı şifreyle yedek', message: 'Bu yedek dosyası yalnızca burada belirleyeceğiniz şifreyle açılabilir (uygulama şifresi ve kurtarma kodu çalışmaz). Şifreyi unutmayın.', placeholder: 'Yedek şifresi (en az 8 karakter)', required: true, confirmText: 'Yedeği indir' });
               if (!pw) return;
-              if (pw.length < 6) return toast('Şifre en az 6 karakter olmalı.', 'error');
+              if (pw.length < 8) return toast('Şifre en az 8 karakter olmalı.', 'error');
               attempt(() => exportBackupFile(pw), 'Yedek dosyası indirildi');
             }}><KeyRound /> Farklı bir şifreyle indir</button>
           </div>

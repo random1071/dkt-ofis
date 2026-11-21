@@ -127,6 +127,53 @@ export async function deleteClient(id: string) {
   await run(ops, { action: 'delete', entity: 'clients', entityId: id, summary: `${c.name} kalıcı olarak silindi (geçmiş kaydı yoktu)` });
 }
 
+/**
+ * KVKK silme / anonimleştirme: danışanın kimliğini belirleyen bilgileri kalıcı olarak kaldırır,
+ * muhasebe tutarlılığı için tutarlar ve tarihler korunur. Geri alınamaz.
+ * Not: Bu işlemden ÖNCE alınmış yedekler eski bilgileri içermeye devam eder.
+ */
+export async function anonymizeClient(id: string): Promise<string> {
+  const c = db().clients.get(id);
+  ensure(c, 'Danışan bulunamadı.');
+  ensure(c.archived, 'Önce danışanı arşivleyin.');
+  ensure(!c.anonymizedAt, 'Bu danışan zaten anonimleştirilmiş.');
+  const now = nowISO();
+  const label = `Anonim danışan ${id.slice(0, 4).toUpperCase()}`;
+  const names = [c.name, c.guardianName, c.emergencyName].filter((x): x is string => !!x && x.trim().length > 1);
+  const scrub = (t?: string) => {
+    if (!t) return t;
+    let out = t;
+    for (const n of names) out = out.split(n).join(label);
+    return out;
+  };
+  const ops: Op[] = [];
+  ops.push(op('clients', {
+    id: c.id, createdAt: c.createdAt, updatedAt: now, archived: true, archivedAt: c.archivedAt,
+    name: label, phone: '', registeredAt: c.registeredAt, sessionDuration: c.sessionDuration, sessionFee: c.sessionFee,
+    billingMode: c.billingMode, sessionType: c.sessionType, anonymizedAt: now,
+  } as Client));
+  for (const a of db().appointments.values()) {
+    if (a.clientId !== id) continue;
+    ops.push(op('appointments', { ...a, notes: undefined, sessionNote: undefined, cancelReason: undefined, updatedAt: now, history: a.history.map((h) => ({ ...h, detail: scrub(h.detail) })) }));
+  }
+  for (const p of db().packages.values()) if (p.clientId === id) ops.push(op('packages', { ...p, notes: undefined, updatedAt: now, revisions: p.revisions?.map((r) => ({ ...r, reason: scrub(r.reason), before: {} })) }));
+  for (const p of db().payments.values()) if (p.clientId === id) ops.push(op('payments', { ...p, note: scrub(p.note), voidReason: scrub(p.voidReason), updatedAt: now, revisions: p.revisions?.map((r) => ({ ...r, reason: scrub(r.reason), before: {} })) }));
+  for (const tx of db().packageTx.values()) {
+    const pk = db().packages.get(tx.packageId);
+    if (pk?.clientId === id && tx.reason) ops.push(op('packageTx', { ...tx, reason: scrub(tx.reason), updatedAt: now }));
+  }
+  for (const n of db().notes.values()) if (n.clientId === id) ops.push(del('notes', n.id));
+  for (const t of db().tasks.values()) if (t.clientId === id) ops.push(op('tasks', { ...t, title: scrub(t.title) ?? 'Görev', description: scrub(t.description), clientId: undefined, updatedAt: now }));
+  for (const w of db().waiting.values()) if (w.clientId === id) ops.push(op('waiting', { ...w, name: label, phone: '', notes: undefined, clientId: undefined, updatedAt: now }));
+  for (const s of db().series.values()) if (s.clientId === id && s.notes) ops.push(op('series', { ...s, notes: undefined, updatedAt: now }));
+  for (const x of db().activity.values()) {
+    const sc = scrub(x.summary);
+    if (sc !== x.summary) ops.push(op('activity', { ...x, summary: sc }));
+  }
+  await run(ops, { action: 'anonymize', entity: 'clients', entityId: id, summary: `${label}: kişisel bilgiler KVKK kapsamında kalıcı olarak anonimleştirildi (tutarlar korundu)` });
+  return label;
+}
+
 // ───────────────────────── Randevular ─────────────────────────
 
 export interface ApptInput {

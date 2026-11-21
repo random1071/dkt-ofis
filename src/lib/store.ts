@@ -18,6 +18,7 @@ import { TABLES, type ActivityEntry, type DB, type Settings, type TableName } fr
 export const DATA_VERSION = 1;
 export const REAL_DB = 'ezgi-terapi-ofisi';
 export const DEMO_DB = 'ezgi-terapi-ofisi-demo';
+/** Yalnızca hayali verili demo veritabanı için; gerçek veriyle ilgisi yoktur. */
 export const DEMO_PASSWORD = 'demo-mod-sifresi';
 
 export type Status = 'booting' | 'setup' | 'locked' | 'unlocked' | 'error';
@@ -151,9 +152,7 @@ async function setupVault(password: string, profile: { therapistName?: string; o
     createdAt: nowISO(),
     dataVersion: DATA_VERSION,
   };
-  // Anahtar bellekte "dışa aktarılamaz" olarak tutulsun
-  const raw = await crypto.subtle.exportKey('raw', dek);
-  dataKey = await crypto.subtle.importKey('raw', raw, { name: 'AES-GCM' }, true, ['encrypt', 'decrypt']);
+  dataKey = await toSessionKey(dek);
   await setMeta('vault', meta);
   const db = emptyDB();
   const now = nowISO();
@@ -171,6 +170,16 @@ async function setupVault(password: string, profile: { therapistName?: string; o
   return recovery;
 }
 
+/** Oturum anahtarı bellekte "dışa aktarılamaz" (non-extractable) tutulur: sayfadaki bir betik bile ham anahtarı okuyamaz. */
+async function toSessionKey(dek: CryptoKey): Promise<CryptoKey> {
+  const raw = new Uint8Array(await crypto.subtle.exportKey('raw', dek));
+  try {
+    return await crypto.subtle.importKey('raw', raw, { name: 'AES-GCM' }, false, ['encrypt', 'decrypt']);
+  } finally {
+    raw.fill(0);
+  }
+}
+
 export async function setup(password: string, profile: { therapistName?: string; officeName?: string }): Promise<string> {
   return setupVault(password, profile);
 }
@@ -179,7 +188,7 @@ export async function unlock(password: string): Promise<boolean> {
   const vault = await getMeta<VaultMeta>('vault');
   if (!vault) return false;
   try {
-    dataKey = await unwrapDataKey(vault.wrappedByPassword, password);
+    dataKey = await unwrapDataKey(vault.wrappedByPassword, password, false);
   } catch {
     return false;
   }
@@ -199,7 +208,7 @@ export async function unlockWithRecovery(code: string, newPassword: string): Pro
   vault.wrappedByPassword = await wrapDataKey(dek, newPassword);
   vault.passwordChangedAt = nowISO();
   await setMeta('vault', vault);
-  dataKey = dek;
+  dataKey = await toSessionKey(dek);
   await loadAll(vault);
   return true;
 }

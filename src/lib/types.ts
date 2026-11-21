@@ -39,6 +39,7 @@ export interface Client extends BaseRecord {
   notes?: string;
   needsFollowUp?: boolean;
   color?: string;
+  anonymizedAt?: string;
 }
 
 export type AppointmentStatus = 'planned' | 'completed' | 'cancelled' | 'noshow' | 'postponed';
