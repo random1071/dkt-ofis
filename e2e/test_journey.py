@@ -200,7 +200,7 @@ with sync_playwright() as p:
     with page.expect_download() as dl:
         page.get_by_test_id("export-backup").click()
     d = dl.value
-    path = "/home/claude/e2e/backup.json"
+    path = os.path.join(WORK, "backup.json")
     d.save_as(path)
     data = open(path).read()
     ok("yedek dosyası indirildi ve şifreli", '"format":"dkt-ofis-yedek"' in data and "Test Danışan" not in data and "Kırtasiye" not in data, f"{len(data)} bayt")
@@ -266,7 +266,7 @@ with sync_playwright() as p:
     page.get_by_test_id("tour-next").wait_for(timeout=5000)
     page.keyboard.press("Escape"); page.wait_for_timeout(300)
     page.goto(BASE + "#/yedekleme"); page.wait_for_timeout(400)
-    page.get_by_test_id("restore-input").set_input_files("/home/claude/e2e/backup.json")
+    page.get_by_test_id("restore-input").set_input_files(os.path.join(WORK, "backup.json"))
     page.get_by_test_id("restore-password").fill("yanlis"); page.get_by_test_id("restore-decrypt").click(); page.wait_for_timeout(800)
     ok("yedek: yanlış şifre reddedildi", "Şifre yanlış" in page.locator(".modal").last.inner_text())
     page.get_by_test_id("restore-password").fill(PW); page.get_by_test_id("restore-decrypt").click(); page.wait_for_timeout(1000)
@@ -287,5 +287,5 @@ with sync_playwright() as p:
 
     print("\nKONSOL HATALARI:", len(errors))
     for e in errors[:20]: print("  ", e)
-    json.dump(results, open("/home/claude/e2e/results_journey.json", "w"), ensure_ascii=False)
+    json.dump(results, open(os.path.join(WORK, "results_journey.json"), "w"), ensure_ascii=False)
     print(f"\n{sum(r[1] for r in results)}/{len(results)} geçti")

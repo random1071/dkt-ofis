@@ -1,13 +1,17 @@
 import os, shutil, json, time
 from playwright.sync_api import sync_playwright, expect
 
-BASE = "http://localhost:4173/"
-CHROME = "/usr/bin/google-chrome"
-SHOTS = "/home/claude/e2e/shots"
+# Yollar ortam değişkenleriyle değiştirilebilir (ör. macOS'ta yerel Chrome ile çalıştırmak için)
+BASE = os.environ.get("E2E_BASE", "http://localhost:4173/")
+CHROME = os.environ.get("E2E_CHROME", "/usr/bin/google-chrome")
+WORK = os.environ.get("E2E_WORK", "/home/claude/e2e")
+SHOTS = os.path.join(WORK, "shots")
 os.makedirs(SHOTS, exist_ok=True)
 PW = "Dkt-Test-2026!"
 
 def launch(p, profile, mobile=False, fresh=False):
+    if "E2E_WORK" in os.environ:
+        profile = os.path.join(WORK, "profiles", os.path.basename(profile))
     if fresh and os.path.exists(profile):
         shutil.rmtree(profile)
     kw = dict(executable_path=CHROME, headless=True, accept_downloads=True, locale="tr-TR", timezone_id="Europe/Istanbul",
