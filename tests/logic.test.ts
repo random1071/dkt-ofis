@@ -15,7 +15,7 @@ describe('Uçtan uca iş akışı (veri katmanı)', () => {
     __setNow('2026-11-21T10:00');
     await S.boot();
     expect(S.getState().status).toBe('setup');
-    recovery = await S.setup(PW, { therapistName: 'Test Terapist' });
+    recovery = (await S.setup(PW, { therapistName: 'Test Terapist' }))!;
     expect(S.getState().status).toBe('unlocked');
     await S.updateSettings({ defaultFee: 1500 });
   });

@@ -17,6 +17,16 @@ import { TABLE_LABELS, TABLES } from '../lib/types';
 import { attempt, confirmDialog, Field, Modal, openModal, promptDialog, Segmented, useCloseModal } from '../components/ui';
 import { toast } from '../lib/toast';
 
+/** Şifresiz kullanımda yedek dosyası için yedek şifresi sorar (en az 8 karakter, iki kez). */
+async function askBackupPassword(): Promise<string | null> {
+  const pw = await promptDialog({ label: 'Yedek şifresi', message: 'Bu yedek dosyası yalnızca burada belirleyeceğiniz şifreyle açılabilir. Şifreyi unutmayın; unutulursa dosya açılamaz.', placeholder: 'Yedek şifresi (en az 8 karakter)', required: true, confirmText: 'Devam' });
+  if (!pw) return null;
+  if (pw.length < 8) { toast('Şifre en az 8 karakter olmalı.', 'error'); return null; }
+  const again = await promptDialog({ label: 'Yedek şifresi (tekrar)', placeholder: 'Aynı şifreyi tekrar girin', required: true, confirmText: 'Yedeği oluştur' });
+  if (again !== pw) { if (again !== null) toast('Şifreler aynı değil.', 'error'); return null; }
+  return pw;
+}
+
 function fmtSize(n?: number) {
   if (!n) return '—';
   if (n < 1024) return `${n} B`;
@@ -89,15 +99,27 @@ export function BackupPage() {
         <div className={`card ${exportOld ? '' : ''}`} style={exportOld ? { borderColor: 'color-mix(in srgb, var(--warn) 45%, var(--border))' } : undefined}>
           <div className="card-head"><h3>Yedek dosyası (önerilen)</h3><ShieldCheck style={{ width: 18, height: 18, color: 'var(--ok)' }} /></div>
           <div className="card-body col gap-3">
-            <p className="small muted" style={{ lineHeight: 1.55 }}>Tüm kayıtlarınızı tek bir <b>şifreli</b> dosyaya kaydeder. Dosya, oluşturulduğu andaki <b>uygulama şifrenizle</b> (veya kurtarma kodunuzla) açılır. USB belleğe, bilgisayarınızdaki bir klasöre, iCloud/Google Drive gibi bir yere kaydedin.</p>
-            <button className="btn primary lg" onClick={() => attempt(async () => { const n = await exportBackupFile(); return n; }, 'Yedek dosyası indirildi')} data-testid="export-backup"><Download /> Yedek dosyasını indir</button>
-            {canShareFiles() && <button className="btn" onClick={() => attempt(async () => { const ok = await shareBackupFile(); if (ok) toast('Yedek paylaşıldı'); return ok; })}><Share2 /> Paylaş / Dosyalar'a kaydet</button>}
-            <button className="btn ghost sm" style={{ alignSelf: 'flex-start' }} onClick={async () => {
+            {st.passwordMode ? (
+              <p className="small muted" style={{ lineHeight: 1.55 }}>Tüm kayıtlarınızı tek bir <b>şifreli</b> dosyaya kaydeder. Dosya, oluşturulduğu andaki <b>uygulama şifrenizle</b> (veya kurtarma kodunuzla) açılır. USB belleğe, bilgisayarınızdaki bir klasöre, iCloud/Google Drive gibi bir yere kaydedin.</p>
+            ) : (
+              <p className="small muted" style={{ lineHeight: 1.55 }} data-testid="device-backup-note">Tüm kayıtlarınızı tek bir <b>şifreli</b> dosyaya kaydeder. Şifresiz kullanımda uygulama şifresi olmadığı için her yedekte bir <b>yedek şifresi</b> belirlersiniz; dosya yalnızca bu şifreyle açılır. Şifreyi unutmayın. USB belleğe, bilgisayarınızdaki bir klasöre, iCloud/Google Drive gibi bir yere kaydedin.</p>
+            )}
+            <button className="btn primary lg" onClick={async () => {
+              if (st.passwordMode) return attempt(async () => { const n = await exportBackupFile(); return n; }, 'Yedek dosyası indirildi');
+              const pw = await askBackupPassword();
+              if (pw) attempt(() => exportBackupFile(pw), 'Yedek dosyası indirildi');
+            }} data-testid="export-backup"><Download /> Yedek dosyasını indir</button>
+            {canShareFiles() && <button className="btn" onClick={async () => {
+              const pw = st.passwordMode ? undefined : await askBackupPassword();
+              if (!st.passwordMode && !pw) return;
+              attempt(async () => { const ok = await shareBackupFile(pw ?? undefined); if (ok) toast('Yedek paylaşıldı'); return ok; });
+            }}><Share2 /> Paylaş / Dosyalar'a kaydet</button>}
+            {st.passwordMode && <button className="btn ghost sm" style={{ alignSelf: 'flex-start' }} onClick={async () => {
               const pw = await promptDialog({ label: 'Farklı şifreyle yedek', message: 'Bu yedek dosyası yalnızca burada belirleyeceğiniz şifreyle açılabilir (uygulama şifresi ve kurtarma kodu çalışmaz). Şifreyi unutmayın.', placeholder: 'Yedek şifresi (en az 8 karakter)', required: true, confirmText: 'Yedeği indir' });
               if (!pw) return;
               if (pw.length < 8) return toast('Şifre en az 8 karakter olmalı.', 'error');
               attempt(() => exportBackupFile(pw), 'Yedek dosyası indirildi');
-            }}><KeyRound /> Farklı bir şifreyle indir</button>
+            }}><KeyRound /> Farklı bir şifreyle indir</button>}
           </div>
         </div>
       </div>

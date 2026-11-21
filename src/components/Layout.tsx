@@ -73,7 +73,7 @@ function useAutoLock() {
   const st = useAppState();
   const last = useRef(Date.now());
   useEffect(() => {
-    if (st.demo || !s.autoLockMinutes) return;
+    if (st.demo || !st.passwordMode || !s.autoLockMinutes) return; // şifresiz kullanımda otomatik kilit yok
     const bump = () => (last.current = Date.now());
     const evs = ['pointerdown', 'keydown', 'wheel', 'touchstart'];
     evs.forEach((e) => window.addEventListener(e, bump, { passive: true }));
@@ -89,7 +89,7 @@ function useAutoLock() {
       clearInterval(t);
       document.removeEventListener('visibilitychange', vis);
     };
-  }, [s.autoLockMinutes, st.demo]);
+  }, [s.autoLockMinutes, st.demo, st.passwordMode]);
 }
 
 export function Layout({ children }: { children: React.ReactNode }) {

@@ -5,6 +5,7 @@ import { enterDemo, setup, unlock, unlockWithRecovery } from '../lib/store';
 import { copyText, downloadText } from '../lib/format';
 import { toast } from '../lib/toast';
 import { Field } from '../components/ui';
+import { startTour } from '../components/Tour';
 
 function PasswordInput({ value, onChange, placeholder, autoFocus, id, onEnter }: { value: string; onChange: (v: string) => void; placeholder?: string; autoFocus?: boolean; id?: string; onEnter?: () => void }) {
   const [show, setShow] = useState(false);
@@ -47,11 +48,24 @@ export function SetupScreen({ onBegin, onCode }: { onBegin: () => void; onCode: 
     onBegin();
     try {
       const c = await setup(pw, { therapistName: therapistName.trim(), officeName });
-      onCode(c);
+      onCode(c!);
     } catch (e) {
       console.error(e);
       toast('Kurulum tamamlanamadı. Tarayıcı depolama iznini kontrol edin.', 'error');
     } finally {
+      setBusy(false);
+    }
+  }
+
+  /** Şifresiz kullanım: kayıtlar yine şifreli saklanır, yalnızca açılışta şifre sorulmaz. */
+  async function createWithoutPassword() {
+    setBusy(true);
+    try {
+      await setup(null, { therapistName: therapistName.trim(), officeName });
+      setTimeout(() => startTour(), 400);
+    } catch (e) {
+      console.error(e);
+      toast('Kurulum tamamlanamadı. Tarayıcı depolama iznini kontrol edin.', 'error');
       setBusy(false);
     }
   }
@@ -74,7 +88,7 @@ export function SetupScreen({ onBegin, onCode }: { onBegin: () => void; onCode: 
             <p className="muted" style={{ lineHeight: 1.6 }}>
               DKT Ofis ile randevuların, danışanların, ödemelerin ve ofis giderlerin tek bir yerde. Tüm kayıtların yalnızca bu cihazda, şifreli olarak saklanır; internet olmadan da çalışır.
             </p>
-            <div className="callout accent"><ShieldCheck /><div className="callout-body small">Kurulum 1 dakika sürer: ad bilgisi, giriş şifresi ve şifreni unutursan kullanacağın kurtarma kodu.</div></div>
+            <div className="callout accent"><ShieldCheck /><div className="callout-body small">Kurulum 1 dakika sürer: ad bilgisi ve isteğe bağlı giriş şifresi (şifre seçersen, unutursan kullanacağın kurtarma kodu da verilir).</div></div>
             <button className="btn primary lg block" onClick={() => setStep(1)} data-testid="setup-start">Başlayalım <ArrowRight /></button>
             <button className="btn ghost block" onClick={enterDemo}><Sparkles /> Önce örnek verilerle keşfet (demo)</button>
           </div>
@@ -96,8 +110,8 @@ export function SetupScreen({ onBegin, onCode }: { onBegin: () => void; onCode: 
 
         {step === 2 && (
           <div className="col gap-4 fade-in">
-            <h1>Giriş şifresi</h1>
-            <p className="small muted" style={{ lineHeight: 1.55 }}>Uygulamayı her açtığında bu şifreyi gireceksin. Kayıtların bu şifreyle şifrelenir; şifre hiçbir yere gönderilmez ve düz metin olarak saklanmaz.</p>
+            <h1>Giriş şifresi (isteğe bağlı)</h1>
+            <p className="small muted" style={{ lineHeight: 1.55 }}>Şifre belirlersen uygulamayı her açtığında bu şifreyi gireceksin (önerilen). Şifre hiçbir yere gönderilmez ve düz metin olarak saklanmaz. İstersen şifresiz de kullanabilir, şifreyi sonradan Ayarlar'dan açıp kapatabilirsin.</p>
             <Field label="Şifre" help={pw ? `Güç: ${labels[st]}${pw.length < MIN_PW ? ` · en az ${MIN_PW} karakter` : ''}` : `En az ${MIN_PW} karakter; harf + rakam karışımı önerilir. Doğum tarihi gibi tahmin edilebilir şifreler kullanmayın.`}>
               <PasswordInput value={pw} onChange={setPw} autoFocus id="pw1" />
             </Field>
@@ -107,6 +121,10 @@ export function SetupScreen({ onBegin, onCode }: { onBegin: () => void; onCode: 
               <button className="btn" onClick={() => setStep(1)}>Geri</button>
               <button className="btn primary grow" disabled={busy} onClick={create} data-testid="setup-create">{busy ? 'Hazırlanıyor…' : 'Şifreyi oluştur'}</button>
             </div>
+            <div className="callout warn small"><Lock /><div className="callout-body">
+              <b>Şifresiz kullanım:</b> kayıtların bu cihazda yine şifreli saklanır, ancak uygulama şifre sormadan açılır. Telefonun veya bilgisayarın kilidi açıkken eline alan herkes kayıtları görebilir. Bu seçeneği yalnızca cihazın kendi ekran kilidi (Face ID / kod) açıksa kullan.
+            </div></div>
+            <button className="btn ghost block" disabled={busy} onClick={createWithoutPassword} data-testid="setup-no-password">Şifresiz devam et</button>
           </div>
         )}
       </div>

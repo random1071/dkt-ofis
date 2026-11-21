@@ -3,7 +3,7 @@ import {
   Ban, Building2, Clock, KeyRound, Lock, Palette, Pencil, Plus, ShieldCheck, Sparkles, Trash2, Wallet, X, CalendarDays, HardDriveDownload, Power, Copy, Info,
 } from 'lucide-react';
 import {
-  changePassword, enterDemo, exitDemo, getSettings, lock, regenerateRecovery, updateSettings, useAppState, useDB, useSettings, verifyPassword, REAL_DB,
+  changePassword, disablePassword, enablePassword, enterDemo, exitDemo, getSettings, getState, lock, regenerateRecovery, updateSettings, useAppState, useDB, useSettings, verifyPassword, REAL_DB,
 } from '../lib/store';
 import * as A from '../lib/actions';
 import { fmtDate, fmtDateTime, today, WEEKDAYS } from '../lib/dates';
@@ -189,7 +189,14 @@ export function SettingsPage() {
         </Section>
 
         <Section id="guvenlik" icon={<Lock />} title="Güvenlik">
-          {st.demo ? <div className="small muted">Demo modunda güvenlik ayarları devre dışıdır.</div> : (
+          {st.demo ? <div className="small muted">Demo modunda güvenlik ayarları devre dışıdır.</div> : !st.passwordMode ? (
+            <div className="col gap-4">
+              <div className="callout warn small"><Lock /><div className="callout-body"><b>Şifre koruması kapalı.</b> Kayıtlarınız bu cihazda yine şifreli saklanır, ancak uygulama şifre sormadan açılır: cihazın kilidi açıkken eline alan herkes kayıtları görebilir. Danışan bilgileri için şifre korumasını açmanızı öneririz.</div></div>
+              <div className="row wrap">
+                <button className="btn primary" onClick={() => openModal(<EnablePasswordForm />)} data-testid="enable-password"><KeyRound /> Şifre korumasını aç</button>
+              </div>
+            </div>
+          ) : (
             <div className="col gap-4">
               <Field label="Otomatik kilitleme" hint="Belirtilen süre boyunca işlem yapılmazsa uygulama kilitlenir ve şifre ister.">
                 <select className="select" style={{ maxWidth: 260 }} value={s.autoLockMinutes} onChange={(e) => save({ autoLockMinutes: Number(e.target.value) })}>
@@ -207,6 +214,18 @@ export function SettingsPage() {
                   openModal(<Modal title="Yeni kurtarma kodunuz" size="sm"><div className="col gap-3"><div className="recovery-code">{code}</div><button className="btn" onClick={async () => toast((await copyText(code)) ? 'Kopyalandı' : 'Kopyalanamadı')}><Copy /> Kopyala</button><p className="small muted">Bu kodu güvenli bir yere kaydedin. Not: daha önce aldığınız yedek dosyaları eski kurtarma koduyla açılmaya devam eder.</p></div></Modal>);
                 }}><ShieldCheck /> Yeni kurtarma kodu</button>
                 <button className="btn" onClick={lock}><Lock /> Şimdi kilitle</button>
+                <button className="btn ghost" data-testid="disable-password" onClick={async () => {
+                  const ok = await confirmDialog({ title: 'Şifre korumasını kapat', message: 'Uygulama artık şifre sormadan açılacak; cihazın kilidi açıkken eline alan herkes kayıtları görebilir. Kayıtlar cihazda şifreli kalmaya devam eder. Mevcut kurtarma kodunuz geçersiz olur. Daha önce aldığınız yedek dosyaları, oluşturuldukları andaki şifreyle (veya kurtarma koduyla) açılmaya devam eder.', confirmText: 'Devam et', danger: true });
+                  if (!ok) return;
+                  const pw = await promptDialog({ label: 'Mevcut şifreniz', placeholder: 'Uygulama şifresi', required: true, confirmText: 'Şifre korumasını kapat' });
+                  if (!pw) return;
+                  try {
+                    if (!(await disablePassword(pw))) return toast('Şifre yanlış.', 'error');
+                    toast('Şifre koruması kapatıldı. Kayıtlarınız korunuyor.', 'success');
+                  } catch (e) {
+                    toast((e as Error).message, 'error', { ttl: 10000 });
+                  }
+                }}><Power /> Şifre korumasını kapat</button>
               </div>
               <div className="callout info small"><Info /><div className="callout-body">Verileriniz cihazınızda AES-256 ile şifrelenir; şifreniz düz metin olarak saklanmaz. Bu, sunucu tarafında yönetilen profesyonel bir kimlik doğrulama sistemiyle aynı güvenliği sağlamaz: cihazınızın kilidi ve tarayıcı güvenliği de önemlidir. Cihazınızı ekran kilidiyle korumanızı öneririz.</div></div>
             </div>
@@ -262,8 +281,10 @@ export function SettingsPage() {
 async function wipeAll() {
   const ok1 = await confirmDialog({ title: 'Tüm veriler silinecek', message: 'Danışanlar, randevular, ödemeler, giderler ve tüm ayarlar bu cihazdan silinecek. Yedek dosyanız yoksa veriler geri getirilemez. Devam etmeden önce Yedekleme ekranından yedek almanızı öneririz.', confirmText: 'Devam et', danger: true });
   if (!ok1) return;
-  const pw = await promptDialog({ label: 'Şifrenizi girin', placeholder: 'Uygulama şifresi', required: true, confirmText: 'Doğrula' });
-  if (!pw || !(await verifyPassword(pw))) return toast('Şifre yanlış.', 'error');
+  if (getState().passwordMode) {
+    const pw = await promptDialog({ label: 'Şifrenizi girin', placeholder: 'Uygulama şifresi', required: true, confirmText: 'Doğrula' });
+    if (!pw || !(await verifyPassword(pw))) return toast('Şifre yanlış.', 'error');
+  }
   const word = await promptDialog({ label: 'Onay', message: 'Silmek için büyük harflerle SİL yazın.', required: true, confirmText: 'Kalıcı olarak sil' });
   if (word?.toLocaleUpperCase('tr') !== 'SİL') return toast('İşlem iptal edildi.', 'info');
   await wipeDatabase(REAL_DB);
@@ -368,6 +389,35 @@ function PoliciesForm() {
       </div>
       <div className="row end"><button className="btn primary" disabled={!changed} onClick={() => attempt(() => updateSettings({ cancellationPolicy: c, noShowPolicy: n, packagePolicy: p }, 'Politikalar güncellendi'), 'Politikalar kaydedildi')}>Politikaları kaydet</button></div>
     </div>
+  );
+}
+
+function EnablePasswordForm() {
+  const close = useCloseModal();
+  const [a, setA] = useState('');
+  const [b, setB] = useState('');
+  const [busy, setBusy] = useState(false);
+  async function go() {
+    if (a.length < 8) return toast('Şifre en az 8 karakter olmalı.', 'error');
+    if (a !== b) return toast('Şifreler aynı değil.', 'error');
+    setBusy(true);
+    try {
+      const code = await enablePassword(a);
+      close();
+      openModal(<Modal title="Şifre koruması açıldı — kurtarma kodunuz" size="sm"><div className="col gap-3"><p className="small muted">Şifrenizi unutursanız kayıtlarınıza <b>yalnızca bu kodla</b> ulaşabilirsiniz. Kimse (geliştirici dahil) şifrenizi sıfırlayamaz. Kodu kâğıda yazın veya güvenli bir yere kaydedin.</p><div className="recovery-code" data-testid="recovery-code">{code}</div><button className="btn" onClick={async () => toast((await copyText(code)) ? 'Kopyalandı' : 'Kopyalanamadı')}><Copy /> Kopyala</button></div></Modal>);
+    } catch (e) {
+      toast((e as Error).message, 'error', { ttl: 10000 });
+      setBusy(false);
+    }
+  }
+  return (
+    <Modal size="sm" title="Şifre korumasını aç" footer={<><button className="btn" onClick={close}>Vazgeç</button><button className="btn primary" disabled={busy} onClick={go} data-testid="enable-password-save">{busy ? 'Kaydediliyor…' : 'Şifreyi oluştur'}</button></>}>
+      <div className="col gap-4">
+        <div className="small muted">Uygulama her açılışta bu şifreyi soracak. Kayıtlarınız silinmez veya değişmez. Ardından size bir kurtarma kodu gösterilecek.</div>
+        <Field label="Yeni şifre" hint="En az 8 karakter; harf + rakam karışımı önerilir."><input className="input" type="password" value={a} onChange={(e) => setA(e.target.value)} autoFocus data-testid="enable-pw1" /></Field>
+        <Field label="Yeni şifre (tekrar)"><input className="input" type="password" value={b} onChange={(e) => setB(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && go()} data-testid="enable-pw2" /></Field>
+      </div>
+    </Modal>
   );
 }
 

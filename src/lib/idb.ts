@@ -1,12 +1,19 @@
 // IndexedDB katmanı. Tüm iş verisi "records" deposunda şifreli tutulur.
 import { openDB, type IDBPDatabase } from 'idb';
-import type { WrappedKey } from './crypto';
+import type { DeviceWrappedKey, WrappedKey } from './crypto';
 
 export const IDB_VERSION = 1;
 
+/**
+ * Kasa bilgisi. `mode` alanı olmayan (önceki sürümlerde oluşturulmuş) kasalar şifreli kabul edilir.
+ * - password: veri anahtarı şifreyle ve kurtarma koduyla sarılı
+ * - device: veri anahtarı dışa aktarılamayan cihaz anahtarıyla (meta/deviceKey) sarılı; şifre sorulmaz
+ */
 export interface VaultMeta {
-  wrappedByPassword: WrappedKey;
-  wrappedByRecovery: WrappedKey;
+  mode?: 'password' | 'device';
+  wrappedByPassword?: WrappedKey;
+  wrappedByRecovery?: WrappedKey;
+  wrappedByDevice?: DeviceWrappedKey;
   createdAt: string;
   dataVersion: number;
   passwordChangedAt?: string;
@@ -79,6 +86,26 @@ export async function getMeta<T>(key: string): Promise<T | undefined> {
 export async function setMeta(key: string, value: unknown): Promise<void> {
   const db = await getDB();
   await db.put('meta', value, key);
+}
+
+/**
+ * Birden çok meta kaydını TEK işlemde yazar/siler. İşlem yarıda kalırsa (hata, sekme kapanması)
+ * IndexedDB hiçbir değişikliği uygulamaz; önceki kasa bilgisi geçerli kalır.
+ */
+export async function setMetaAtomic(puts: [string, unknown][], deletes: string[] = []): Promise<void> {
+  const db = await getDB();
+  const tx = db.transaction('meta', 'readwrite');
+  const store = tx.objectStore('meta');
+  try {
+    for (const [k, v] of puts) store.put(v, k).catch(() => undefined);
+    for (const k of deletes) store.delete(k).catch(() => undefined);
+  } catch (e) {
+    // Bir kayıt kuyruğa bile alınamadıysa (ör. DataCloneError) önceki kayıtlar da yazılmasın
+    try { tx.abort(); } catch { /* zaten bitmiş */ }
+    await tx.done.catch(() => undefined);
+    throw e;
+  }
+  await tx.done;
 }
 
 export async function getAllRecords(): Promise<StoredRecord[]> {

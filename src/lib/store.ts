@@ -3,11 +3,11 @@
 // yazma başarılı olursa ekrana yansır. Böylece ekranda görünen = diskte olan.
 import { useSyncExternalStore } from 'react';
 import {
-  decryptBytes, encryptBytes, generateDataKey, generateRecoveryCode, normalizeRecoveryCode,
-  unwrapDataKey, uuid, wrapDataKey,
+  decryptBytes, encryptBytes, generateDataKey, generateDeviceKey, generateRecoveryCode, normalizeRecoveryCode,
+  unwrapDataKey, unwrapWithKey, uuid, wrapDataKey, wrapWithKey,
 } from './crypto';
 import {
-  copyDatabaseIfNeeded, getAllRecords, getMeta, isQuotaError, replaceAllRecords, setMeta, writeRecords,
+  copyDatabaseIfNeeded, getAllRecords, getMeta, isQuotaError, replaceAllRecords, setMeta, setMetaAtomic, writeRecords,
   setDatabaseName, getDatabaseName, type StoredRecord, type VaultMeta,
 } from './idb';
 import { defaultSettings, TEMPLATE_DEFAULTS } from './defaults';
@@ -33,6 +33,8 @@ export interface AppState {
   rev: number;
   demo: boolean;
   persisted: boolean | null;
+  /** true: uygulama şifreyle açılıyor; false: şifresiz (cihaz anahtarı) kullanım */
+  passwordMode: boolean;
   error?: string;
 }
 
@@ -42,7 +44,7 @@ export function emptyDB(): DB {
   return db;
 }
 
-let state: AppState = { status: 'booting', db: emptyDB(), rev: 0, demo: false, persisted: null };
+let state: AppState = { status: 'booting', db: emptyDB(), rev: 0, demo: false, persisted: null, passwordMode: true };
 let dataKey: CryptoKey | null = null;
 const listeners = new Set<() => void>();
 const changeListeners = new Set<(tables: Set<TableName>) => void>();
@@ -127,7 +129,20 @@ export async function boot() {
       await unlock(DEMO_PASSWORD);
       return;
     }
-    setState({ status: vault ? 'locked' : 'setup' });
+    if (vault && !isPasswordVault(vault)) {
+      // Şifresiz kullanım: veri anahtarı cihaz anahtarıyla açılır, kilit ekranı gösterilmez
+      setState({ passwordMode: false });
+      try {
+        dataKey = await openDeviceVault(vault, false);
+      } catch (e) {
+        console.error(e);
+        setState({ status: 'error', error: 'Bu cihazdaki şifreleme anahtarı açılamadı. Kayıtlarınız silinmedi. Sayfayı yenileyin; sorun sürerse Yardım bölümündeki "yedekten geri yükleme" adımlarını izleyin.' });
+        return;
+      }
+      await loadAll(vault);
+      return;
+    }
+    setState({ status: vault ? 'locked' : 'setup', passwordMode: true });
   } catch (e) {
     console.error(e);
     setState({ status: 'error', error: 'Yerel veritabanı açılamadı. Tarayıcınız gizli (özel) modda olabilir ya da depolama izni kapalı olabilir.' });
@@ -171,17 +186,32 @@ export async function retryPersistence(): Promise<boolean> {
   }
 }
 
-async function setupVault(password: string, profile: { therapistName?: string; officeName?: string }): Promise<string> {
+/**
+ * Kasayı oluşturur. Şifre verilirse şifreli kullanım (kurtarma koduyla birlikte),
+ * verilmezse (null) şifresiz kullanım: veri anahtarı dışa aktarılamayan cihaz anahtarıyla sarılır.
+ * Her iki durumda da kayıtlar AES-GCM ile şifreli saklanır.
+ */
+async function setupVault(password: string | null, profile: { therapistName?: string; officeName?: string }): Promise<string | null> {
   const dek = await generateDataKey();
-  const recovery = generateRecoveryCode();
-  const meta: VaultMeta = {
-    wrappedByPassword: await wrapDataKey(dek, password),
-    wrappedByRecovery: await wrapDataKey(dek, normalizeRecoveryCode(recovery)),
-    createdAt: nowISO(),
-    dataVersion: DATA_VERSION,
-  };
+  const meta: VaultMeta = { createdAt: nowISO(), dataVersion: DATA_VERSION };
+  const puts: [string, unknown][] = [];
+  let recovery: string | null = null;
+  if (password) {
+    recovery = generateRecoveryCode();
+    meta.mode = 'password';
+    meta.wrappedByPassword = await wrapDataKey(dek, password);
+    meta.wrappedByRecovery = await wrapDataKey(dek, normalizeRecoveryCode(recovery));
+  } else {
+    const kek = await generateDeviceKey();
+    meta.mode = 'device';
+    meta.wrappedByDevice = await wrapWithKey(dek, kek);
+    await assertSameKey(dek, await unwrapWithKey(meta.wrappedByDevice, kek, true));
+    puts.push(['deviceKey', kek]);
+  }
+  puts.push(['vault', meta]);
   dataKey = await toSessionKey(dek);
-  await setMeta('vault', meta);
+  await setMetaAtomic(puts);
+  setState({ passwordMode: !!password });
   const db = emptyDB();
   const now = nowISO();
   const s = defaultSettings(now);
@@ -208,25 +238,149 @@ async function toSessionKey(dek: CryptoKey): Promise<CryptoKey> {
   }
 }
 
-export async function setup(password: string, profile: { therapistName?: string; officeName?: string }): Promise<string> {
+/** password = null → şifresiz kullanım (kurtarma kodu üretilmez, dönüş değeri null). */
+export async function setup(password: string | null, profile: { therapistName?: string; officeName?: string }): Promise<string | null> {
   return setupVault(password, profile);
+}
+
+function isPasswordVault(v: VaultMeta): boolean {
+  return v.mode !== 'device';
+}
+
+async function openDeviceVault(vault: VaultMeta, extractable: boolean): Promise<CryptoKey> {
+  const kek = await getMeta<CryptoKey>('deviceKey');
+  if (!kek || !vault.wrappedByDevice) throw new Error('Cihaz anahtarı bulunamadı');
+  return unwrapWithKey(vault.wrappedByDevice, kek, extractable);
+}
+
+/** İki anahtarın aynı ham anahtar olduğunu doğrular (yalnızca geçiş sırasında, extractable kopyalarla). */
+async function assertSameKey(a: CryptoKey, b: CryptoKey) {
+  const ra = new Uint8Array(await crypto.subtle.exportKey('raw', a));
+  const rb = new Uint8Array(await crypto.subtle.exportKey('raw', b));
+  try {
+    if (ra.length !== rb.length || ra.some((x, i) => x !== rb[i])) throw new Error('Anahtar doğrulaması başarısız');
+  } finally {
+    ra.fill(0);
+    rb.fill(0);
+  }
+}
+
+/** Yalnızca testlerde: geçişin yarıda kesilmesini / doğrulama hatasını taklit eder. */
+export const __testHooks = { failNextVaultWrite: false, failNextVerify: false };
+
+/**
+ * Kasa geçişini güvenli yapar:
+ * 1) yeni kasa + cihaz anahtarı değişikliği TEK IndexedDB işlemiyle yazılır (yarıda kalırsa hiçbiri uygulanmaz),
+ * 2) yazılan kasa yeniden okunup açılarak doğrulanır, 3) doğrulama başarısızsa önceki kasa geri yazılır.
+ * Kayıtlara dokunulmaz: veri anahtarı değişmez.
+ */
+async function commitVaultChange(
+  next: VaultMeta,
+  change: { puts: [string, unknown][]; deletes: string[] },
+  rollback: { puts: [string, unknown][]; deletes: string[] },
+  verify: (stored: VaultMeta) => Promise<void>,
+) {
+  const puts: [string, unknown][] = [...change.puts, ['vault', next]];
+  if (__testHooks.failNextVaultWrite) {
+    __testHooks.failNextVaultWrite = false;
+    puts.push(['__test_uncloneable', () => 0]); // DataCloneError → işlem iptal
+  }
+  try {
+    await setMetaAtomic(puts, change.deletes);
+  } catch (e) {
+    console.error(e);
+    throw new Error('İşlem tamamlanamadı. Hiçbir şey değişmedi; önceki giriş yönteminiz geçerli.');
+  }
+  try {
+    if (__testHooks.failNextVerify) {
+      __testHooks.failNextVerify = false;
+      throw new Error('test: doğrulama hatası');
+    }
+    const stored = await getMeta<VaultMeta>('vault');
+    if (!stored) throw new Error('Kasa okunamadı');
+    await verify(stored);
+  } catch (e) {
+    console.error(e);
+    await setMetaAtomic(rollback.puts, rollback.deletes);
+    throw new Error('Değişiklik doğrulanamadı ve geri alındı. Önceki giriş yönteminiz geçerli.');
+  }
+}
+
+/**
+ * Şifresiz kullanımdan şifreli kullanıma geçer. Başarılıysa yeni kurtarma kodunu döndürür
+ * (yalnızca ekranda gösterilmek üzere). Veri anahtarı ve kayıtlar değişmez.
+ */
+export async function enablePassword(newPassword: string): Promise<string> {
+  const vault = await getMeta<VaultMeta>('vault');
+  if (!vault || isPasswordVault(vault)) throw new Error('Şifre koruması zaten açık.');
+  const prevKek = await getMeta<CryptoKey>('deviceKey');
+  const dek = await openDeviceVault(vault, true);
+  const code = generateRecoveryCode();
+  const next: VaultMeta = {
+    ...vault,
+    mode: 'password',
+    wrappedByPassword: await wrapDataKey(dek, newPassword),
+    wrappedByRecovery: await wrapDataKey(dek, normalizeRecoveryCode(code)),
+    passwordChangedAt: nowISO(),
+  };
+  delete next.wrappedByDevice;
+  // Yazmadan önce: yeni sarmalar aynı anahtarı açıyor mu?
+  await assertSameKey(dek, await unwrapDataKey(next.wrappedByPassword!, newPassword));
+  await assertSameKey(dek, await unwrapDataKey(next.wrappedByRecovery!, normalizeRecoveryCode(code)));
+  await commitVaultChange(
+    next,
+    { puts: [], deletes: ['deviceKey'] },
+    { puts: [['deviceKey', prevKek], ['vault', vault]], deletes: [] },
+    async (s) => assertSameKey(dek, await unwrapDataKey(s.wrappedByPassword!, newPassword)),
+  );
+  setState({ passwordMode: true });
+  return code;
+}
+
+/**
+ * Şifreli kullanımdan şifresiz kullanıma geçer. Mevcut şifre yanlışsa false döner.
+ * Kurtarma kodu geçersiz olur; daha önce alınmış yedek dosyaları kendi şifreleriyle açılmaya devam eder.
+ */
+export async function disablePassword(currentPassword: string): Promise<boolean> {
+  const vault = await getMeta<VaultMeta>('vault');
+  if (!vault || !isPasswordVault(vault) || !vault.wrappedByPassword) return false;
+  let dek: CryptoKey;
+  try {
+    dek = await unwrapDataKey(vault.wrappedByPassword, currentPassword);
+  } catch {
+    return false;
+  }
+  const kek = await generateDeviceKey();
+  const next: VaultMeta = { ...vault, mode: 'device', wrappedByDevice: await wrapWithKey(dek, kek), passwordChangedAt: nowISO() };
+  delete next.wrappedByPassword;
+  delete next.wrappedByRecovery;
+  await assertSameKey(dek, await unwrapWithKey(next.wrappedByDevice!, kek, true));
+  await commitVaultChange(
+    next,
+    { puts: [['deviceKey', kek]], deletes: [] },
+    { puts: [['vault', vault]], deletes: ['deviceKey'] },
+    async (s) => assertSameKey(dek, await openDeviceVault(s, true)),
+  );
+  setState({ passwordMode: false });
+  return true;
 }
 
 export async function unlock(password: string): Promise<boolean> {
   const vault = await getMeta<VaultMeta>('vault');
-  if (!vault) return false;
+  if (!vault || !vault.wrappedByPassword) return false;
   try {
     dataKey = await unwrapDataKey(vault.wrappedByPassword, password, false);
   } catch {
     return false;
   }
+  setState({ passwordMode: true });
   await loadAll(vault);
   return true;
 }
 
 export async function unlockWithRecovery(code: string, newPassword: string): Promise<boolean> {
   const vault = await getMeta<VaultMeta>('vault');
-  if (!vault) return false;
+  if (!vault || !vault.wrappedByRecovery) return false;
   let dek: CryptoKey;
   try {
     dek = await unwrapDataKey(vault.wrappedByRecovery, normalizeRecoveryCode(code));
@@ -243,7 +397,7 @@ export async function unlockWithRecovery(code: string, newPassword: string): Pro
 
 export async function changePassword(oldPw: string, newPw: string): Promise<boolean> {
   const vault = await getMeta<VaultMeta>('vault');
-  if (!vault) return false;
+  if (!vault || !vault.wrappedByPassword) return false;
   let dek: CryptoKey;
   try {
     dek = await unwrapDataKey(vault.wrappedByPassword, oldPw);
@@ -259,7 +413,7 @@ export async function changePassword(oldPw: string, newPw: string): Promise<bool
 /** Yeni kurtarma kodu üretir (eskisi geçersiz olur). Mevcut şifre gerekir. */
 export async function regenerateRecovery(password: string): Promise<string | null> {
   const vault = await getMeta<VaultMeta>('vault');
-  if (!vault) return null;
+  if (!vault || !vault.wrappedByPassword) return null;
   let dek: CryptoKey;
   try {
     dek = await unwrapDataKey(vault.wrappedByPassword, password);
@@ -274,7 +428,7 @@ export async function regenerateRecovery(password: string): Promise<string | nul
 
 export async function verifyPassword(password: string): Promise<boolean> {
   const vault = await getMeta<VaultMeta>('vault');
-  if (!vault) return false;
+  if (!vault || !vault.wrappedByPassword) return false;
   try {
     await unwrapDataKey(vault.wrappedByPassword, password, false);
     return true;
@@ -376,7 +530,7 @@ async function migrate(db: DB, vault: VaultMeta): Promise<DB> {
 }
 
 export function lock() {
-  if (state.demo) return;
+  if (state.demo || !state.passwordMode) return; // şifresiz kullanımda kilit yok
   dataKey = null;
   setState({ status: 'locked', db: emptyDB(), rev: state.rev + 1 });
 }

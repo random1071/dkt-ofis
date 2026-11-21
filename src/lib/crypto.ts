@@ -75,6 +75,39 @@ export async function unwrapDataKey(w: WrappedKey, secret: string, extractable =
   );
 }
 
+// ── Şifresiz kullanım: cihaz anahtarı ──
+// Veri anahtarı (DEK), tarayıcıda üretilen ve DIŞA AKTARILAMAYAN bir AES-GCM anahtarıyla sarılır.
+// Bu anahtar IndexedDB'de CryptoKey nesnesi olarak durur; ham baytları hiçbir betiğe verilmez.
+// Kayıtlar yine AES-GCM ile şifreli kalır; yalnızca açılış için şifre istenmez.
+
+export interface DeviceWrappedKey {
+  iv: string;
+  data: string;
+}
+
+export async function generateDeviceKey(): Promise<CryptoKey> {
+  return crypto.subtle.generateKey({ name: 'AES-GCM', length: 256 }, false, ['wrapKey', 'unwrapKey']);
+}
+
+export async function wrapWithKey(dek: CryptoKey, kek: CryptoKey): Promise<DeviceWrappedKey> {
+  const iv = randomBytes(12);
+  const wrapped = await crypto.subtle.wrapKey('raw', dek, kek, { name: 'AES-GCM', iv: iv as BufferSource });
+  return { iv: toB64(iv), data: toB64(wrapped) };
+}
+
+/** Anahtar yanlışsa veya veri bozuksa hata fırlatır (AES-GCM doğrulaması). */
+export async function unwrapWithKey(w: DeviceWrappedKey, kek: CryptoKey, extractable = true): Promise<CryptoKey> {
+  return crypto.subtle.unwrapKey(
+    'raw',
+    fromB64(w.data) as BufferSource,
+    kek,
+    { name: 'AES-GCM', iv: fromB64(w.iv) as BufferSource },
+    { name: 'AES-GCM', length: 256 },
+    extractable,
+    ['encrypt', 'decrypt'],
+  );
+}
+
 export interface Encrypted {
   iv: string;
   ct: string;

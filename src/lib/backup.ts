@@ -22,6 +22,7 @@ export const APP_VERSION = '1.0.0';
 export const FILE_FORMAT = 'dkt-ofis-yedek';
 /** Önceki sürümlerin yedek biçimi — geri yükleme için hâlâ kabul edilir */
 export const LEGACY_FILE_FORMATS = ['ezgi-terapi-ofisi-yedek'];
+export const NEEDS_BACKUP_PASSWORD = 'Şifresiz kullanımda yedek dosyası için bir yedek şifresi belirlemelisiniz.';
 
 export interface BackupState {
   lastAutoAt?: string;
@@ -185,6 +186,8 @@ export async function buildBackupFile(customPassword?: string): Promise<{ blob: 
   } else {
     const vault = await getMeta<VaultMeta>('vault');
     if (!vault) throw new Error('Kasa bilgisi bulunamadı');
+    // Şifresiz kullanımda uygulama şifresi yoktur: dosya cihaz dışına şifresiz çıkmasın diye yedek şifresi zorunlu
+    if (vault.mode === 'device' || !vault.wrappedByPassword) throw new Error(NEEDS_BACKUP_PASSWORD);
     const e = await encryptJSON(getDataKey(), snap);
     file = { format: FILE_FORMAT, version: 1, createdAt: nowISO(), appVersion: APP_VERSION, protection: 'app-password', keys: { password: vault.wrappedByPassword, recovery: vault.wrappedByRecovery }, ...e };
   }
@@ -212,9 +215,9 @@ async function verifyBackupFileWithKey(file: BackupFile, customPassword?: string
 }
 
 /** Paylaşma menüsüyle (telefonda Dosyalar / WhatsApp / e-posta vb.) yedeği gönderir */
-export async function shareBackupFile(): Promise<boolean> {
-  const { blob, name, file } = await buildBackupFile();
-  await verifyBackupFileWithKey(file);
+export async function shareBackupFile(customPassword?: string): Promise<boolean> {
+  const { blob, name, file } = await buildBackupFile(customPassword);
+  await verifyBackupFileWithKey(file, customPassword);
   const f = new File([blob], name, { type: 'application/json' });
   const nav = navigator as Navigator & { canShare?: (d: unknown) => boolean };
   if (nav.canShare?.({ files: [f] })) {
@@ -343,6 +346,11 @@ export async function folderPermission(): Promise<PermissionState | 'none'> {
 export async function writeToFolderIfConfigured(interactive = false): Promise<boolean> {
   const h = await getHandle<DirHandle>('backupDir');
   if (!h) return false;
+  if (!getState().passwordMode) {
+    // Yedek şifresi saklanmadığı için şifresiz kullanımda klasöre otomatik dosya yazılmaz
+    await patchBackupState({ lastFolderError: 'Şifresiz kullanımda klasöre otomatik yedek yapılamaz; yedek dosyasını Yedekleme ekranından şifre belirleyerek indirin.' });
+    return false;
+  }
   try {
     let perm = (await h.queryPermission?.({ mode: 'readwrite' })) ?? 'prompt';
     if (perm !== 'granted' && interactive) perm = (await h.requestPermission?.({ mode: 'readwrite' })) ?? 'denied';
