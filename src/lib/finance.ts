@@ -476,3 +476,23 @@ export function findPossibleDuplicatePayment(db: DB, p: { clientId?: string; amo
     (x) => x.clientId === p.clientId && x.kind === p.kind && Math.abs(x.amount - p.amount) < 0.01 && x.date === p.date && Date.parse(x.createdAt) > cutoff,
   );
 }
+
+/**
+ * İptal ve gelmemelerin finansal etkisi: planlanan seans ücreti, bunun ne kadarının ücretlendirildiği
+ * (geç iptal / gelmeme ücreti) ve kaybedilen tutar. Paketli seanslarda ücret, paket seans birim değerinden hesaplanır.
+ */
+export function cancellationImpact(db: DB, from: string, to: string) {
+  let cancelled = 0, noshow = 0, plannedValue = 0, charged = 0;
+  for (const a of db.appointments.values()) {
+    const d = a.start.slice(0, 10);
+    if (d < from || d > to || a.archived) continue;
+    if (a.status !== 'cancelled' && a.status !== 'noshow') continue;
+    if (a.status === 'cancelled') cancelled++;
+    else noshow++;
+    const pk = a.billing === 'package' && a.packageId ? db.packages.get(a.packageId) : undefined;
+    const value = pk ? sessionUnitValue(pk) : a.fee;
+    plannedValue += value;
+    charged += a.billing === 'package' ? (a.packageCreditUsed ? value : 0) : a.charge || 0;
+  }
+  return { cancelled, noshow, plannedValue: round2(plannedValue), charged: round2(charged), lost: round2(Math.max(0, plannedValue - charged)) };
+}

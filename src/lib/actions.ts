@@ -11,6 +11,8 @@ import type {
 } from './types';
 import { SESSION_STATUS_LABEL } from './defaults';
 import { fmtMoney } from './format';
+import { CLINICAL_TABLES } from './types';
+import { removeBlobRows } from './clinical';
 
 export class ActionError extends Error {}
 
@@ -114,6 +116,8 @@ export function clientHasHistory(id: string): boolean {
   for (const a of d.appointments.values()) if (a.clientId === id) return true;
   for (const p of d.payments.values()) if (p.clientId === id) return true;
   for (const p of d.packages.values()) if (p.clientId === id) return true;
+  // Seans notu, hedef, ev çalışması, form veya belgesi olan danışan da kalıcı silinemez (arşiv / anonimleştirme)
+  for (const t of CLINICAL_TABLES) for (const r of (d[t] as Map<string, { clientId?: string }>).values()) if (r.clientId === id) return true;
   return false;
 }
 
@@ -163,6 +167,17 @@ export async function anonymizeClient(id: string): Promise<string> {
     if (pk?.clientId === id && tx.reason) ops.push(op('packageTx', { ...tx, reason: scrub(tx.reason), updatedAt: now }));
   }
   for (const n of db().notes.values()) if (n.clientId === id) ops.push(del('notes', n.id));
+  // Mesleki kayıtlar (seans notları ve sürümleri, hedefler, ölçümler, ev çalışmaları, formlar, belgeler) kalıcı silinir
+  const attachmentIds: string[] = [];
+  for (const t of CLINICAL_TABLES) {
+    for (const r of (db()[t] as Map<string, { id: string; clientId?: string }>).values()) {
+      if (r.clientId !== id) continue;
+      ops.push(del(t, r.id));
+      if (t === 'attachments') attachmentIds.push(r.id);
+    }
+  }
+  const apptIds = new Set(Array.from(db().appointments.values()).filter((a) => a.clientId === id).map((a) => a.id));
+  for (const nl of db().notificationLog.values()) if (nl.appointmentId && apptIds.has(nl.appointmentId)) ops.push(del('notificationLog', nl.id));
   for (const t of db().tasks.values()) if (t.clientId === id) ops.push(op('tasks', { ...t, title: scrub(t.title) ?? 'Görev', description: scrub(t.description), clientId: undefined, updatedAt: now }));
   for (const w of db().waiting.values()) if (w.clientId === id) ops.push(op('waiting', { ...w, name: label, phone: '', notes: undefined, clientId: undefined, updatedAt: now }));
   for (const s of db().series.values()) if (s.clientId === id && s.notes) ops.push(op('series', { ...s, notes: undefined, updatedAt: now }));
@@ -171,6 +186,7 @@ export async function anonymizeClient(id: string): Promise<string> {
     if (sc !== x.summary) ops.push(op('activity', { ...x, summary: sc }));
   }
   await run(ops, { action: 'anonymize', entity: 'clients', entityId: id, summary: `${label}: kişisel bilgiler KVKK kapsamında kalıcı olarak anonimleştirildi (tutarlar korundu)` });
+  await removeBlobRows(attachmentIds);
   return label;
 }
 

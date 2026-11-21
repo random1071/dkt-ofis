@@ -234,6 +234,118 @@ export interface Template extends BaseRecord {
   body: string;
 }
 
+// ───────────── Mesleki takip (seans notları, BEP, ev çalışması, formlar, belgeler) ─────────────
+
+export interface NoteField {
+  key: string;
+  label: string;
+  hint?: string;
+}
+
+export interface NoteTemplate extends BaseRecord {
+  name: string;
+  fields: NoteField[];
+  builtin?: boolean;
+}
+
+export interface SessionNoteVersion {
+  at: string;
+  templateName?: string;
+  values: Record<string, string>;
+  fields: NoteField[];
+}
+
+export interface SessionNote extends BaseRecord {
+  clientId: ID;
+  appointmentId?: ID;
+  date: string; // YYYY-MM-DD
+  templateId?: ID;
+  templateName?: string;
+  /** Not yazıldığı andaki alanlar (şablon sonradan değişse de not aynı görünür) */
+  fields: NoteField[];
+  values: Record<string, string>;
+  status: 'draft' | 'final';
+  versions?: SessionNoteVersion[];
+  deletedAt?: string;
+}
+
+export type GoalStatus = 'active' | 'done' | 'paused';
+
+export interface Goal extends BaseRecord {
+  clientId: ID;
+  kind: 'long' | 'short';
+  parentId?: ID; // kısa vadeli hedefin bağlı olduğu uzun vadeli amaç
+  title: string;
+  criterion?: string;
+  status: GoalStatus;
+  startDate: string;
+  targetDate?: string;
+  note?: string;
+}
+
+export interface GoalProgress extends BaseRecord {
+  goalId: ID;
+  clientId: ID;
+  date: string;
+  correct?: number;
+  total?: number;
+  comment?: string;
+  noteId?: ID;
+  appointmentId?: ID;
+}
+
+export interface Homework extends BaseRecord {
+  clientId: ID;
+  goalId?: ID;
+  title: string;
+  description?: string;
+  assignedDate: string;
+  dueDate?: string;
+  status: 'open' | 'done' | 'not_done';
+  completedAt?: string;
+}
+
+export type FormFieldType = 'text' | 'choice' | 'score';
+
+export interface FormField {
+  id: string;
+  label: string;
+  type: FormFieldType;
+  options?: string[];
+  max?: number;
+}
+
+export interface FormTemplate extends BaseRecord {
+  name: string;
+  fields: FormField[];
+}
+
+export interface FormResponse extends BaseRecord {
+  clientId: ID;
+  templateId?: ID;
+  templateName: string;
+  fields: FormField[];
+  date: string;
+  answers: Record<string, string | number>;
+}
+
+export interface Attachment extends BaseRecord {
+  clientId: ID;
+  name: string;
+  mime: string;
+  size: number;
+  note?: string;
+}
+
+export interface NotificationEntry extends BaseRecord {
+  key: string; // tekrar bildirimini önler: randevu + başlangıç + süre
+  kind: 'upcoming' | 'daily';
+  title: string;
+  body: string;
+  appointmentId?: ID;
+  at: string;
+}
+
 export interface ActivityEntry {
   id: ID;
   at: string;
@@ -289,6 +401,17 @@ export interface Settings {
   onboardingDone?: boolean;
   lastExportAt?: string;
   notifyUpcoming: boolean;
+  /** Ezgi'nin kendi cihazına bildirim (danışana mesaj DEĞİL) */
+  notifications?: NotificationSettings;
+  /** Konuşarak not için bilgilendirme kabul edildi mi */
+  speechConsentAt?: string;
+}
+
+export interface NotificationSettings {
+  enabled: boolean;
+  offsets: number[]; // dakika: 1440 = 1 gün önce, 120 = 2 saat önce
+  dailySummary: boolean;
+  showNames: boolean; // bildirimde danışan adı (varsayılan kapalı)
 }
 
 export interface DB {
@@ -308,6 +431,15 @@ export interface DB {
   external: Map<ID, ExternalSchedule>;
   templates: Map<ID, Template>;
   activity: Map<ID, ActivityEntry>;
+  sessionNotes: Map<ID, SessionNote>;
+  noteTemplates: Map<ID, NoteTemplate>;
+  goals: Map<ID, Goal>;
+  goalProgress: Map<ID, GoalProgress>;
+  homework: Map<ID, Homework>;
+  formTemplates: Map<ID, FormTemplate>;
+  formResponses: Map<ID, FormResponse>;
+  attachments: Map<ID, Attachment>;
+  notificationLog: Map<ID, NotificationEntry>;
 }
 
 export type TableName = keyof DB;
@@ -315,7 +447,11 @@ export type TableName = keyof DB;
 export const TABLES: TableName[] = [
   'settings', 'clients', 'appointments', 'series', 'payments', 'packages', 'packageTx',
   'expenses', 'recurringExpenses', 'tasks', 'notes', 'waiting', 'blocks', 'external', 'templates', 'activity',
+  'sessionNotes', 'noteTemplates', 'goals', 'goalProgress', 'homework', 'formTemplates', 'formResponses', 'attachments', 'notificationLog',
 ];
+
+/** Danışana bağlı mesleki kayıt tabloları (silme / anonimleştirme / dışa aktarma bunları kapsar) */
+export const CLINICAL_TABLES = ['sessionNotes', 'goals', 'goalProgress', 'homework', 'formResponses', 'attachments'] as const;
 
 export const TABLE_LABELS: Record<TableName, string> = {
   settings: 'Ayarlar',
@@ -334,4 +470,13 @@ export const TABLE_LABELS: Record<TableName, string> = {
   external: 'Dış kurum çalışma düzeni',
   templates: 'Mesaj şablonu',
   activity: 'İşlem geçmişi',
+  sessionNotes: 'Seans notu',
+  noteTemplates: 'Not şablonu',
+  goals: 'Hedef (BEP)',
+  goalProgress: 'Hedef ölçümü',
+  homework: 'Ev çalışması',
+  formTemplates: 'Form şablonu',
+  formResponses: 'Doldurulmuş form',
+  attachments: 'Belge / fotoğraf',
+  notificationLog: 'Bildirim geçmişi',
 };

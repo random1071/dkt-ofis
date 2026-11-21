@@ -1,4 +1,4 @@
-import type { Settings, Template, DayHours } from './types';
+import type { NoteTemplate, Settings, Template, DayHours } from './types';
 
 const day = (enabled: boolean, start = '09:00', end = '18:00'): DayHours => ({
   enabled,
@@ -59,8 +59,46 @@ export function defaultSettings(now: string): Settings {
     welcomeCardHidden: false,
     onboardingDone: false,
     notifyUpcoming: true,
+    notifications: { enabled: false, offsets: [1440, 120], dailySummary: true, showNames: false },
   };
 }
+
+/** Hazır seans notu şablonları (kullanıcı düzenleyebilir, kendi şablonunu ekleyebilir) */
+export const NOTE_TEMPLATE_DEFAULTS: Omit<NoteTemplate, 'id' | 'createdAt' | 'updatedAt'>[] = [
+  { name: 'Serbest not', builtin: true, fields: [{ key: 'body', label: 'Not' }] },
+  {
+    name: 'SOAP',
+    builtin: true,
+    fields: [
+      { key: 's', label: 'Subjektif', hint: 'Danışanın / velinin aktardıkları' },
+      { key: 'o', label: 'Objektif', hint: 'Gözlenen ve ölçülen' },
+      { key: 'a', label: 'Değerlendirme', hint: 'Yorum ve ilerleme' },
+      { key: 'p', label: 'Plan', hint: 'Sonraki adımlar' },
+    ],
+  },
+  {
+    name: 'Kısa seans notu',
+    builtin: true,
+    fields: [
+      { key: 'worked', label: 'Çalışılanlar' },
+      { key: 'observation', label: 'Gözlem' },
+      { key: 'homework', label: 'Ev çalışması' },
+      { key: 'next', label: 'Sonraki seans' },
+    ],
+  },
+];
+
+export const GOAL_STATUS_LABEL = { active: 'Devam ediyor', done: 'Tamamlandı', paused: 'Beklemede' } as const;
+export const HOMEWORK_STATUS_LABEL = { open: 'Bekliyor', done: 'Tamamlandı', not_done: 'Tamamlanmadı' } as const;
+export const NOTIFY_OFFSET_OPTIONS: { value: number; label: string }[] = [
+  { value: 2880, label: '2 gün önce' },
+  { value: 1440, label: '1 gün önce' },
+  { value: 180, label: '3 saat önce' },
+  { value: 120, label: '2 saat önce' },
+  { value: 60, label: '1 saat önce' },
+  { value: 30, label: '30 dakika önce' },
+  { value: 15, label: '15 dakika önce' },
+];
 
 export const TEMPLATE_DEFAULTS: Omit<Template, 'id' | 'createdAt' | 'updatedAt'>[] = [
   {

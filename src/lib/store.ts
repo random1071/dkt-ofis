@@ -10,7 +10,7 @@ import {
   copyDatabaseIfNeeded, getAllRecords, getMeta, isQuotaError, replaceAllRecords, setMeta, setMetaAtomic, writeRecords,
   setDatabaseName, getDatabaseName, type StoredRecord, type VaultMeta,
 } from './idb';
-import { defaultSettings, TEMPLATE_DEFAULTS } from './defaults';
+import { defaultSettings, NOTE_TEMPLATE_DEFAULTS, TEMPLATE_DEFAULTS } from './defaults';
 import { nowISO } from './dates';
 import { toast } from './toast';
 import { TABLES, type ActivityEntry, type DB, type Settings, type TableName } from './types';
@@ -221,6 +221,10 @@ async function setupVault(password: string | null, profile: { therapistName?: st
   for (const t of TEMPLATE_DEFAULTS) {
     const id = uuid();
     db.templates.set(id, { ...t, id, createdAt: now, updatedAt: now });
+  }
+  for (const t of NOTE_TEMPLATE_DEFAULTS) {
+    const id = uuid();
+    db.noteTemplates.set(id, { ...t, id, createdAt: now, updatedAt: now });
   }
   await persistAll(db);
   setState({ status: 'unlocked', db, rev: state.rev + 1 });
@@ -439,7 +443,8 @@ export async function verifyPassword(password: string): Promise<boolean> {
 
 async function loadAll(vault: VaultMeta) {
   const key = getDataKey();
-  const rows = await getAllRecords();
+  // Belge içerikleri (attachmentData) belleğe açılmaz; yalnızca görüntülenirken tek tek çözülür
+  const rows = (await getAllRecords()).filter((r) => (TABLES as string[]).includes(r.t));
   const db = emptyDB();
   const failures: string[] = [];
   const CHUNK = 400;
@@ -493,11 +498,19 @@ async function migrate(db: DB, vault: VaultMeta): Promise<DB> {
         statusColors: { ...defaults.statusColors, ...existing.statusColors },
         backup: { ...defaults.backup, ...existing.backup },
         workingHours: { ...defaults.workingHours, ...existing.workingHours },
+        notifications: { ...defaults.notifications!, ...existing.notifications },
       }
     : defaults;
   if (JSON.stringify(merged) !== JSON.stringify(existing)) {
     db.settings.set('main', merged);
     toWrite.push({ t: 'settings', v: merged });
+  }
+  if (db.noteTemplates.size === 0) {
+    for (const t of NOTE_TEMPLATE_DEFAULTS) {
+      const rec = { ...t, id: uuid(), createdAt: now, updatedAt: now };
+      db.noteTemplates.set(rec.id, rec);
+      toWrite.push({ t: 'noteTemplates', v: rec });
+    }
   }
   if (db.templates.size === 0) {
     for (const t of TEMPLATE_DEFAULTS) {
@@ -654,7 +667,15 @@ export function snapshotToDB(s: Snapshot): DB {
   return db;
 }
 
-async function persistAll(db: DB) {
+/** Belge içeriklerinin saklandığı kayıt türü (records deposunda, tablo listesinde değil) */
+export const BLOB_TABLE = 'attachmentData';
+export interface BlobRow {
+  id: string;
+  mime: string;
+  data: string; // base64
+}
+
+async function persistAll(db: DB, blobs?: BlobRow[]) {
   const key = getDataKey();
   const puts: StoredRecord[] = [];
   for (const t of TABLES) {
@@ -663,14 +684,42 @@ async function persistAll(db: DB) {
       puts.push({ k: `${t}/${v.id}`, t, iv, ct });
     }
   }
+  // Belge içerikleri: anlık görüntüde olanlar yazılır; olmayanlar (ör. cihaz içi yedekler belge içeriği taşımaz)
+  // mevcut cihazdan korunur. Yalnızca hâlâ kaydı olan belgelerin içeriği tutulur.
+  const wanted = new Set(Array.from(db.attachments.keys()));
+  const given = new Set<string>();
+  for (const b of blobs ?? []) {
+    if (!b || typeof b.id !== 'string' || !wanted.has(b.id)) continue;
+    const { iv, ct } = await encryptBytes(key, b);
+    puts.push({ k: `${BLOB_TABLE}/${b.id}`, t: BLOB_TABLE, iv, ct });
+    given.add(b.id);
+  }
+  for (const r of await getAllRecords()) {
+    if (r.t !== BLOB_TABLE) continue;
+    const id = r.k.slice(BLOB_TABLE.length + 1);
+    if (wanted.has(id) && !given.has(id)) puts.push(r);
+  }
   await replaceAllRecords(puts);
+}
+
+/** Yedek dosyası için: tablolar + belge içerikleri (cihaz içi yedekler belge içeriği taşımaz). */
+export async function makeFullSnapshot(): Promise<Snapshot> {
+  const snap = makeSnapshot();
+  const key = getDataKey();
+  const blobs: BlobRow[] = [];
+  for (const r of await getAllRecords()) {
+    if (r.t !== BLOB_TABLE) continue;
+    blobs.push(await decryptBytes<BlobRow>(key, r.iv, r.ct));
+  }
+  if (blobs.length) snap.tables[BLOB_TABLE] = blobs;
+  return snap;
 }
 
 /** Tüm veriyi anlık görüntüyle değiştirir (tek işlem). */
 export async function replaceAllData(s: Snapshot): Promise<void> {
   const db = snapshotToDB(s);
   const vault = await getMeta<VaultMeta>('vault');
-  await persistAll(db);
+  await persistAll(db, s.tables[BLOB_TABLE] as BlobRow[] | undefined);
   const migrated = vault ? await migrate(db, vault) : db;
   setState({ db: migrated, rev: state.rev + 1 });
   changeListeners.forEach((l) => l(new Set(TABLES)));

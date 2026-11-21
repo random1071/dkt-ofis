@@ -10,7 +10,7 @@ import {
 } from './idb';
 import { nowISO } from './dates';
 import {
-  SNAPSHOT_FORMATS, countSnapshot, getDataKey, getSettings, getState, makeSnapshot, mergeSnapshots, onDataChange, onUnlocked, replaceAllData,
+  BLOB_TABLE, SNAPSHOT_FORMATS, countSnapshot, getDataKey, getSettings, getState, makeFullSnapshot, makeSnapshot, mergeSnapshots, onDataChange, onUnlocked, replaceAllData,
   type Snapshot,
 } from './store';
 import { TABLES } from './types';
@@ -115,7 +115,7 @@ const FINANCIAL = new Set(['payments', 'packages', 'packageTx', 'expenses']);
 export function initAutoBackup() {
   onDataChange((tables) => {
     if (getState().demo) return;
-    const onlyActivity = [...tables].every((t) => t === 'activity');
+    const onlyActivity = [...tables].every((t) => t === 'activity' || t === 'notificationLog');
     if (onlyActivity) return;
     if (!cached.dirtySince) patchBackupState({ dirtySince: nowISO() }).catch(() => undefined);
     const financial = [...tables].some((t) => FINANCIAL.has(t));
@@ -177,7 +177,7 @@ export interface BackupFile {
  * - Şifre verilirse: dosya yalnızca bu şifreyle açılır.
  */
 export async function buildBackupFile(customPassword?: string): Promise<{ blob: Blob; name: string; file: BackupFile }> {
-  const snap = makeSnapshot();
+  const snap = await makeFullSnapshot(); // belge ve fotoğraf içerikleri dahil
   let file: BackupFile;
   if (customPassword) {
     const fk = await generateDataKey();
@@ -302,6 +302,8 @@ export async function restoreSnapshot(snap: Snapshot, mode: 'replace' | 'merge')
     return {};
   }
   const { merged, added, updated } = mergeSnapshots(makeSnapshot(), snap);
+  // Gelen yedekteki belge içerikleri; cihazdakiler persistAll içinde korunur
+  if (snap.tables[BLOB_TABLE]) merged.tables[BLOB_TABLE] = snap.tables[BLOB_TABLE];
   await replaceAllData(merged);
   await patchBackupState({ dirtySince: nowISO() });
   return { added, updated };
