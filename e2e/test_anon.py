@@ -1,0 +1,23 @@
+import sys, re
+sys.path.insert(0, "/home/claude/e2e")
+from common import *
+with sync_playwright() as p:
+    ctx = launch(p, "/tmp/e2e-anon", fresh=True); page = ctx.new_page(); errs=[]; attach_console(page, errs)
+    page.goto(BASE); page.get_by_role("button", name="Önce örnek verilerle keşfet (demo)").click()
+    page.wait_for_selector(".demo-banner", timeout=30000); page.wait_for_timeout(1000)
+    page.goto(BASE + "#/danisanlar"); page.locator('[data-testid="client-row"]', has_text="Kerem Deneme").click(); page.wait_for_timeout(300)
+    page.locator('button[aria-label="Diğer"]').first.click(); page.get_by_role("button", name="Arşivle").click()
+    page.get_by_role("button", name="Arşivle", exact=True).last.click(); page.wait_for_timeout(500)
+    page.locator('button[aria-label="Diğer"]').first.click()
+    page.get_by_role("button", name="Kişisel bilgileri sil (KVKK)").click()
+    page.get_by_role("button", name="Devam et").click()
+    page.locator(".modal").last.locator("input").fill("SİL")
+    page.get_by_role("button", name="Kalıcı olarak anonimleştir").click(); page.wait_for_timeout(700)
+    main = page.inner_text("main")
+    print("PASS" if ("Anonim danışan" in main and "Kerem" not in main and "Anonimleştirildi" in main) else "FAIL", "UI anonimleştirme:", main[:120].replace("\n"," | "))
+    page.goto(BASE + "#/arsiv"); page.get_by_role("tab", name="İşlem geçmişi").click(); page.wait_for_timeout(300)
+    log = page.inner_text("main")
+    print("PASS" if "Kerem Deneme" not in log else "FAIL", "işlem geçmişinde eski ad kalmadı")
+    page.goto(BASE + "#/odemeler"); page.wait_for_timeout(300)
+    print("PASS" if "Anonim danışan" in page.inner_text("main") else "FAIL", "ödemeler korunuyor, anonim adla görünüyor")
+    print("konsol:", errs[:3]); ctx.close()

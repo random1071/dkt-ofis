@@ -1,0 +1,573 @@
+// Uygulama durumu: şifre çözülmüş veriler bellekte tutulur, her değişiklik
+// önce şifrelenip IndexedDB'ye tek bir işlem (transaction) ile yazılır,
+// yazma başarılı olursa ekrana yansır. Böylece ekranda görünen = diskte olan.
+import { useSyncExternalStore } from 'react';
+import {
+  decryptBytes, encryptBytes, generateDataKey, generateRecoveryCode, normalizeRecoveryCode,
+  unwrapDataKey, uuid, wrapDataKey,
+} from './crypto';
+import {
+  copyDatabaseIfNeeded, getAllRecords, getMeta, isQuotaError, replaceAllRecords, setMeta, writeRecords,
+  setDatabaseName, getDatabaseName, type StoredRecord, type VaultMeta,
+} from './idb';
+import { defaultSettings, TEMPLATE_DEFAULTS } from './defaults';
+import { nowISO } from './dates';
+import { toast } from './toast';
+import { TABLES, type ActivityEntry, type DB, type Settings, type TableName } from './types';
+
+export const DATA_VERSION = 1;
+export const REAL_DB = 'dkt-ofis';
+export const DEMO_DB = 'dkt-ofis-demo';
+/** Önceki sürümün veritabanı adı — açılışta yeni ada kopyalanır (silinmez). */
+export const LEGACY_DB = 'ezgi-terapi-ofisi';
+export const LEGACY_DEMO_DB = 'ezgi-terapi-ofisi-demo';
+export const SNAPSHOT_FORMATS = ['dkt-ofis', 'ezgi-terapi-ofisi'] as const;
+/** Yalnızca hayali verili demo veritabanı için; gerçek veriyle ilgisi yoktur. */
+export const DEMO_PASSWORD = 'demo-mod-sifresi';
+
+export type Status = 'booting' | 'setup' | 'locked' | 'unlocked' | 'error';
+
+export interface AppState {
+  status: Status;
+  db: DB;
+  rev: number;
+  demo: boolean;
+  persisted: boolean | null;
+  error?: string;
+}
+
+export function emptyDB(): DB {
+  const db = {} as DB;
+  for (const t of TABLES) (db as unknown as Record<string, Map<string, unknown>>)[t] = new Map();
+  return db;
+}
+
+let state: AppState = { status: 'booting', db: emptyDB(), rev: 0, demo: false, persisted: null };
+let dataKey: CryptoKey | null = null;
+const listeners = new Set<() => void>();
+const changeListeners = new Set<(tables: Set<TableName>) => void>();
+const unlockListeners = new Set<() => Promise<void> | void>();
+
+function setState(patch: Partial<AppState>) {
+  state = { ...state, ...patch };
+  listeners.forEach((l) => l());
+}
+
+export function getState() {
+  return state;
+}
+
+export function subscribe(l: () => void) {
+  listeners.add(l);
+  return () => listeners.delete(l);
+}
+
+export function useAppState(): AppState {
+  return useSyncExternalStore(subscribe, getState);
+}
+
+export function useDB(): DB {
+  return useSyncExternalStore(subscribe, () => state.db);
+}
+
+export function getDBSnapshot(): DB {
+  return state.db;
+}
+
+export function getSettings(): Settings {
+  const s = state.db.settings.get('main');
+  return s ?? defaultSettings(nowISO());
+}
+
+export function useSettings(): Settings {
+  const db = useDB();
+  return db.settings.get('main') ?? defaultSettings(nowISO());
+}
+
+export function onDataChange(l: (tables: Set<TableName>) => void) {
+  changeListeners.add(l);
+  return () => changeListeners.delete(l);
+}
+
+export function onUnlocked(l: () => Promise<void> | void) {
+  unlockListeners.add(l);
+  return () => unlockListeners.delete(l);
+}
+
+export function getDataKey(): CryptoKey {
+  if (!dataKey) throw new Error('Uygulama kilitli');
+  return dataKey;
+}
+
+// ───────────────────────── Açılış ─────────────────────────
+
+export async function boot() {
+  try {
+    migrateLocalKeys();
+    const demo = localStorage.getItem('dkt-demo') === '1';
+    if (!demo) {
+      try {
+        const r = await copyDatabaseIfNeeded(LEGACY_DB, REAL_DB);
+        if (r === 'copied') console.info('Önceki sürümün verileri yeni veritabanına kopyalandı.');
+      } catch (e) {
+        console.error('Eski veritabanı kopyalanamadı', e);
+      }
+    }
+    setDatabaseName(demo ? DEMO_DB : REAL_DB);
+    const vault = await getMeta<VaultMeta>('vault');
+    setState({ demo });
+    requestPersistence();
+    if (demo) {
+      if (!vault) {
+        const { seedDemo } = await import('./demo');
+        await setupVault(DEMO_PASSWORD, {});
+        await seedDemo();
+        return;
+      }
+      await unlock(DEMO_PASSWORD);
+      return;
+    }
+    setState({ status: vault ? 'locked' : 'setup' });
+  } catch (e) {
+    console.error(e);
+    setState({ status: 'error', error: 'Yerel veritabanı açılamadı. Tarayıcınız gizli (özel) modda olabilir ya da depolama izni kapalı olabilir.' });
+  }
+}
+
+/** Eski localStorage anahtarlarını yeni adlara taşır (yalnızca arayüz tercihleri). */
+function migrateLocalKeys() {
+  try {
+    for (const [o, n] of [['ezgi-theme', 'dkt-theme'], ['ezgi-name', 'dkt-name'], ['ezgi-lock-fails', 'dkt-lock-fails'], ['ezgi-demo', 'dkt-demo']]) {
+      const v = localStorage.getItem(o);
+      if (v !== null) {
+        if (localStorage.getItem(n) === null) localStorage.setItem(n, v);
+        localStorage.removeItem(o);
+      }
+    }
+  } catch {
+    /* depolama kapalı olabilir */
+  }
+}
+
+async function requestPersistence() {
+  try {
+    if (navigator.storage?.persisted) {
+      let p = await navigator.storage.persisted();
+      if (!p && navigator.storage.persist) p = await navigator.storage.persist();
+      setState({ persisted: p });
+    }
+  } catch {
+    setState({ persisted: false });
+  }
+}
+
+export async function retryPersistence(): Promise<boolean> {
+  try {
+    const p = (await navigator.storage?.persist?.()) ?? false;
+    setState({ persisted: p });
+    return p;
+  } catch {
+    return false;
+  }
+}
+
+async function setupVault(password: string, profile: { therapistName?: string; officeName?: string }): Promise<string> {
+  const dek = await generateDataKey();
+  const recovery = generateRecoveryCode();
+  const meta: VaultMeta = {
+    wrappedByPassword: await wrapDataKey(dek, password),
+    wrappedByRecovery: await wrapDataKey(dek, normalizeRecoveryCode(recovery)),
+    createdAt: nowISO(),
+    dataVersion: DATA_VERSION,
+  };
+  dataKey = await toSessionKey(dek);
+  await setMeta('vault', meta);
+  const db = emptyDB();
+  const now = nowISO();
+  const s = defaultSettings(now);
+  if (profile.therapistName) s.therapistName = profile.therapistName;
+  if (profile.officeName) s.officeName = profile.officeName;
+  db.settings.set('main', s);
+  for (const t of TEMPLATE_DEFAULTS) {
+    const id = uuid();
+    db.templates.set(id, { ...t, id, createdAt: now, updatedAt: now });
+  }
+  await persistAll(db);
+  setState({ status: 'unlocked', db, rev: state.rev + 1 });
+  await runUnlockListeners();
+  return recovery;
+}
+
+/** Oturum anahtarı bellekte "dışa aktarılamaz" (non-extractable) tutulur: sayfadaki bir betik bile ham anahtarı okuyamaz. */
+async function toSessionKey(dek: CryptoKey): Promise<CryptoKey> {
+  const raw = new Uint8Array(await crypto.subtle.exportKey('raw', dek));
+  try {
+    return await crypto.subtle.importKey('raw', raw, { name: 'AES-GCM' }, false, ['encrypt', 'decrypt']);
+  } finally {
+    raw.fill(0);
+  }
+}
+
+export async function setup(password: string, profile: { therapistName?: string; officeName?: string }): Promise<string> {
+  return setupVault(password, profile);
+}
+
+export async function unlock(password: string): Promise<boolean> {
+  const vault = await getMeta<VaultMeta>('vault');
+  if (!vault) return false;
+  try {
+    dataKey = await unwrapDataKey(vault.wrappedByPassword, password, false);
+  } catch {
+    return false;
+  }
+  await loadAll(vault);
+  return true;
+}
+
+export async function unlockWithRecovery(code: string, newPassword: string): Promise<boolean> {
+  const vault = await getMeta<VaultMeta>('vault');
+  if (!vault) return false;
+  let dek: CryptoKey;
+  try {
+    dek = await unwrapDataKey(vault.wrappedByRecovery, normalizeRecoveryCode(code));
+  } catch {
+    return false;
+  }
+  vault.wrappedByPassword = await wrapDataKey(dek, newPassword);
+  vault.passwordChangedAt = nowISO();
+  await setMeta('vault', vault);
+  dataKey = await toSessionKey(dek);
+  await loadAll(vault);
+  return true;
+}
+
+export async function changePassword(oldPw: string, newPw: string): Promise<boolean> {
+  const vault = await getMeta<VaultMeta>('vault');
+  if (!vault) return false;
+  let dek: CryptoKey;
+  try {
+    dek = await unwrapDataKey(vault.wrappedByPassword, oldPw);
+  } catch {
+    return false;
+  }
+  vault.wrappedByPassword = await wrapDataKey(dek, newPw);
+  vault.passwordChangedAt = nowISO();
+  await setMeta('vault', vault);
+  return true;
+}
+
+/** Yeni kurtarma kodu üretir (eskisi geçersiz olur). Mevcut şifre gerekir. */
+export async function regenerateRecovery(password: string): Promise<string | null> {
+  const vault = await getMeta<VaultMeta>('vault');
+  if (!vault) return null;
+  let dek: CryptoKey;
+  try {
+    dek = await unwrapDataKey(vault.wrappedByPassword, password);
+  } catch {
+    return null;
+  }
+  const code = generateRecoveryCode();
+  vault.wrappedByRecovery = await wrapDataKey(dek, normalizeRecoveryCode(code));
+  await setMeta('vault', vault);
+  return code;
+}
+
+export async function verifyPassword(password: string): Promise<boolean> {
+  const vault = await getMeta<VaultMeta>('vault');
+  if (!vault) return false;
+  try {
+    await unwrapDataKey(vault.wrappedByPassword, password, false);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function loadAll(vault: VaultMeta) {
+  const key = getDataKey();
+  const rows = await getAllRecords();
+  const db = emptyDB();
+  const failures: string[] = [];
+  const CHUNK = 400;
+  for (let i = 0; i < rows.length; i += CHUNK) {
+    const part = rows.slice(i, i + CHUNK);
+    const values = await Promise.all(
+      part.map((r) => decryptBytes<Record<string, unknown>>(key, r.iv, r.ct).catch(() => {
+        failures.push(r.k);
+        return null;
+      })),
+    );
+    part.forEach((r, idx) => {
+      const v = values[idx];
+      if (!v) return;
+      const table = (db as unknown as Record<string, Map<string, unknown>>)[r.t];
+      if (table) table.set(String(v.id), v);
+    });
+  }
+  if (failures.length) {
+    console.error('Çözülemeyen kayıtlar', failures);
+    toast(`${failures.length} kayıt okunamadı. Lütfen son yedeği kontrol edin.`, 'error', { ttl: 10000 });
+  }
+  const migrated = await migrate(db, vault);
+  setState({ status: 'unlocked', db: migrated, rev: state.rev + 1 });
+  await runUnlockListeners();
+}
+
+async function runUnlockListeners() {
+  for (const l of unlockListeners) {
+    try {
+      await l();
+    } catch (e) {
+      console.error(e);
+    }
+  }
+}
+
+/** Veri sürümü göçleri. Var olan kayıtları silmez, yalnızca eksik alanları tamamlar. */
+async function migrate(db: DB, vault: VaultMeta): Promise<DB> {
+  const now = nowISO();
+  const toWrite: { t: TableName; v: { id: string } }[] = [];
+  const existing = db.settings.get('main');
+  const defaults = defaultSettings(now);
+  const merged: Settings = existing
+    ? {
+        ...defaults,
+        ...existing,
+        cancellationPolicy: { ...defaults.cancellationPolicy, ...existing.cancellationPolicy },
+        noShowPolicy: { ...defaults.noShowPolicy, ...existing.noShowPolicy },
+        packagePolicy: { ...defaults.packagePolicy, ...existing.packagePolicy },
+        statusColors: { ...defaults.statusColors, ...existing.statusColors },
+        backup: { ...defaults.backup, ...existing.backup },
+        workingHours: { ...defaults.workingHours, ...existing.workingHours },
+      }
+    : defaults;
+  if (JSON.stringify(merged) !== JSON.stringify(existing)) {
+    db.settings.set('main', merged);
+    toWrite.push({ t: 'settings', v: merged });
+  }
+  if (db.templates.size === 0) {
+    for (const t of TEMPLATE_DEFAULTS) {
+      const rec = { ...t, id: uuid(), createdAt: now, updatedAt: now };
+      db.templates.set(rec.id, rec);
+      toWrite.push({ t: 'templates', v: rec });
+    }
+  }
+  // Randevu geçmiş dizisi garanti
+  for (const a of db.appointments.values()) {
+    if (!Array.isArray(a.history)) {
+      a.history = [];
+      toWrite.push({ t: 'appointments', v: a });
+    }
+  }
+  if (toWrite.length) {
+    const key = getDataKey();
+    const puts: StoredRecord[] = [];
+    for (const w of toWrite) {
+      const { iv, ct } = await encryptBytes(key, w.v);
+      puts.push({ k: `${w.t}/${w.v.id}`, t: w.t, iv, ct });
+    }
+    await writeRecords(puts, []);
+  }
+  if (vault.dataVersion !== DATA_VERSION) {
+    vault.dataVersion = DATA_VERSION;
+    await setMeta('vault', vault);
+  }
+  return db;
+}
+
+export function lock() {
+  if (state.demo) return;
+  dataKey = null;
+  setState({ status: 'locked', db: emptyDB(), rev: state.rev + 1 });
+}
+
+// ───────────────────────── Yazma ─────────────────────────
+
+export interface Op {
+  t: TableName;
+  v?: { id: string } & Record<string, unknown>;
+  del?: string;
+}
+
+export interface ActivityInput {
+  action: string;
+  entity: TableName | string;
+  entityId?: string;
+  summary: string;
+}
+
+let queue: Promise<unknown> = Promise.resolve();
+
+/**
+ * Değişiklikleri tek bir işlemde kaydeder. İlişkili finansal değişiklikler (ör. ödeme +
+ * paket hareketi) aynı çağrıda verilirse ya hepsi kaydedilir ya hiçbiri.
+ */
+export function commit(ops: Op[], activity?: ActivityInput | ActivityInput[], opts: { silent?: boolean } = {}): Promise<boolean> {
+  const run = async () => {
+    if (!dataKey) {
+      toast('Uygulama kilitli. Lütfen tekrar giriş yapın.', 'error');
+      return false;
+    }
+    const now = nowISO();
+    const acts = activity ? (Array.isArray(activity) ? activity : [activity]) : [];
+    const allOps: Op[] = [...ops];
+    for (const a of acts) {
+      const entry: ActivityEntry = { id: uuid(), at: now, createdAt: now, updatedAt: now, ...a };
+      allOps.push({ t: 'activity', v: entry as unknown as Op['v'] });
+    }
+    try {
+      const puts: StoredRecord[] = [];
+      const dels: string[] = [];
+      for (const op of allOps) {
+        if (op.v) {
+          const { iv, ct } = await encryptBytes(dataKey, op.v);
+          puts.push({ k: `${op.t}/${op.v.id}`, t: op.t, iv, ct });
+        } else if (op.del) {
+          dels.push(`${op.t}/${op.del}`);
+        }
+      }
+      await writeRecords(puts, dels);
+    } catch (e) {
+      console.error(e);
+      if (isQuotaError(e)) {
+        toast('Cihazda depolama alanı doldu! Değişiklik kaydedilemedi. Lütfen hemen bir yedek dışa aktarın ve cihazda yer açın.', 'error', { ttl: 15000 });
+      } else {
+        toast('Değişiklik kaydedilemedi. Lütfen tekrar deneyin.', 'error');
+      }
+      return false;
+    }
+    const db = { ...state.db } as DB;
+    const touched = new Set<TableName>();
+    for (const op of allOps) {
+      if (!touched.has(op.t)) {
+        (db as unknown as Record<string, Map<string, unknown>>)[op.t] = new Map(state.db[op.t] as Map<string, unknown>);
+        touched.add(op.t);
+      }
+      const m = (db as unknown as Record<string, Map<string, unknown>>)[op.t];
+      if (op.v) m.set(op.v.id, op.v);
+      else if (op.del) m.delete(op.del);
+    }
+    setState({ db, rev: state.rev + 1 });
+    changeListeners.forEach((l) => l(touched));
+    if (!opts.silent) {
+      // sessiz değilse kayıt onayı çağıran tarafından gösterilir
+    }
+    return true;
+  };
+  const p = queue.then(run, run);
+  queue = p.catch(() => undefined);
+  return p;
+}
+
+export function put<T extends { id: string }>(t: TableName, v: T, activity?: ActivityInput | ActivityInput[]) {
+  return commit([{ t, v: v as unknown as Op['v'] }], activity);
+}
+
+export async function updateSettings(patch: Partial<Settings>, summary = 'Ayarlar güncellendi') {
+  const s = { ...getSettings(), ...patch, updatedAt: nowISO() };
+  return commit([{ t: 'settings', v: s as unknown as Op['v'] }], { action: 'update', entity: 'settings', summary });
+}
+
+// ───────────────────────── Anlık görüntü / geri yükleme ─────────────────────────
+
+export interface Snapshot {
+  format: (typeof SNAPSHOT_FORMATS)[number];
+  dataVersion: number;
+  exportedAt: string;
+  tables: Record<string, unknown[]>;
+}
+
+export function makeSnapshot(db: DB = state.db): Snapshot {
+  const tables: Record<string, unknown[]> = {};
+  for (const t of TABLES) tables[t] = Array.from((db[t] as Map<string, unknown>).values());
+  return { format: 'dkt-ofis', dataVersion: DATA_VERSION, exportedAt: nowISO(), tables };
+}
+
+export function countSnapshot(s: Snapshot): Record<string, number> {
+  const out: Record<string, number> = {};
+  for (const t of TABLES) out[t] = s.tables[t]?.length ?? 0;
+  return out;
+}
+
+export function snapshotToDB(s: Snapshot): DB {
+  const db = emptyDB();
+  for (const t of TABLES) {
+    const m = db[t] as Map<string, unknown>;
+    for (const r of (s.tables[t] ?? []) as { id: string }[]) {
+      if (r && typeof r.id === 'string') m.set(r.id, r);
+    }
+  }
+  return db;
+}
+
+async function persistAll(db: DB) {
+  const key = getDataKey();
+  const puts: StoredRecord[] = [];
+  for (const t of TABLES) {
+    for (const v of (db[t] as Map<string, { id: string }>).values()) {
+      const { iv, ct } = await encryptBytes(key, v);
+      puts.push({ k: `${t}/${v.id}`, t, iv, ct });
+    }
+  }
+  await replaceAllRecords(puts);
+}
+
+/** Tüm veriyi anlık görüntüyle değiştirir (tek işlem). */
+export async function replaceAllData(s: Snapshot): Promise<void> {
+  const db = snapshotToDB(s);
+  const vault = await getMeta<VaultMeta>('vault');
+  await persistAll(db);
+  const migrated = vault ? await migrate(db, vault) : db;
+  setState({ db: migrated, rev: state.rev + 1 });
+  changeListeners.forEach((l) => l(new Set(TABLES)));
+  await runUnlockListeners();
+}
+
+/** Birleştirme: aynı kimlikli kayıtlarda güncellenme tarihi yeni olan kalır; eksikler eklenir. */
+export function mergeSnapshots(current: Snapshot, incoming: Snapshot): { merged: Snapshot; added: number; updated: number } {
+  const merged: Snapshot = { ...current, tables: {} };
+  let added = 0;
+  let updated = 0;
+  for (const t of TABLES) {
+    const map = new Map<string, { id: string; updatedAt?: string }>();
+    for (const r of (current.tables[t] ?? []) as { id: string; updatedAt?: string }[]) map.set(r.id, r);
+    for (const r of (incoming.tables[t] ?? []) as { id: string; updatedAt?: string }[]) {
+      if (!r?.id) continue;
+      const ex = map.get(r.id);
+      if (!ex) {
+        if (t === 'settings') continue; // ayarlar mevcut cihazda kalır
+        map.set(r.id, r);
+        added++;
+      } else if ((r.updatedAt ?? '') > (ex.updatedAt ?? '') && t !== 'settings') {
+        map.set(r.id, r);
+        updated++;
+      }
+    }
+    merged.tables[t] = Array.from(map.values());
+  }
+  return { merged, added, updated };
+}
+
+// ───────────────────────── Demo modu ─────────────────────────
+
+export function enterDemo() {
+  localStorage.setItem('dkt-demo', '1');
+  location.hash = '#/';
+  location.reload();
+}
+
+export async function exitDemo() {
+  localStorage.removeItem('dkt-demo');
+  const { wipeDatabase } = await import('./idb');
+  try {
+    await wipeDatabase(DEMO_DB);
+  } catch {
+    /* önemsiz */
+  }
+  location.hash = '#/';
+  location.reload();
+}
+
+export function currentDatabase() {
+  return getDatabaseName();
+}

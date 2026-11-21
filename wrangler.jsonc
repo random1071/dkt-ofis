@@ -1,0 +1,13 @@
+// Cloudflare Workers (yalnızca statik dosyalar) yapılandırması.
+// pages.dev Türkiye'den erişilemediği için uygulama workers.dev üzerinden yayınlanır.
+// Sunucu tarafı kod yoktur: yalnızca `npm run build` çıktısı (dist/) servis edilir.
+// Güvenlik başlıkları dist/_headers dosyasından okunur.
+{
+  "name": "dkt-ofis",
+  "compatibility_date": "2025-10-01",
+  "assets": {
+    "directory": "./dist"
+  },
+  "workers_dev": true,
+  "preview_urls": false
+}

@@ -1,0 +1,71 @@
+import sys
+sys.path.insert(0, "/home/claude/e2e")
+from common import *
+results = []
+def ok(n, c, d=""):
+    results.append((n, bool(c), d)); print(("PASS" if c else "FAIL"), n, d)
+
+with sync_playwright() as p:
+    errors = []
+    ctx = launch(p, "/tmp/e2e-mobile", mobile=True, fresh=True)
+    page = ctx.new_page(); attach_console(page, errors)
+    page.goto(BASE)
+    page.wait_for_timeout(600)
+    shot(page, "m01-welcome")
+    page.get_by_role("button", name="Önce örnek verilerle keşfet (demo)").click()
+    page.wait_for_selector(".demo-banner", timeout=30000)
+    page.wait_for_timeout(1500)
+    ok("demo modu açıldı", page.locator(".demo-banner").is_visible())
+    shot(page, "m02-dashboard")
+    shot(page, "m02b-dashboard-full", full=True)
+    page.goto(BASE + "#/takvim"); page.wait_for_timeout(800)
+    shot(page, "m03-calendar-day")
+    page.get_by_role("button", name="Ay", exact=True).click(); page.wait_for_timeout(400)
+    shot(page, "m04-calendar-month")
+    page.get_by_role("button", name="Gün", exact=True).click(); page.wait_for_timeout(300)
+    page.goto(BASE + "#/bugun"); page.wait_for_timeout(500)
+    shot(page, "m05-today", full=True)
+    page.goto(BASE + "#/danisanlar"); page.wait_for_timeout(500)
+    shot(page, "m06-clients")
+    page.locator('[data-testid="client-row"]').first.click(); page.wait_for_timeout(500)
+    shot(page, "m07-client-detail", full=True)
+    page.locator('[data-tour="tab-add"]').click(); page.wait_for_timeout(300)
+    shot(page, "m08-quick-add")
+    page.locator(".modal").last.get_by_role("button", name="Randevu").click(); page.wait_for_timeout(500)
+    shot(page, "m09-appt-form")
+    page.keyboard.press("Escape"); page.wait_for_timeout(300)
+    page.locator('[data-tour="tab-menu"]').click(); page.wait_for_timeout(300)
+    shot(page, "m10-menu")
+    page.keyboard.press("Escape")
+    page.goto(BASE + "#/odemeler"); page.wait_for_timeout(500)
+    shot(page, "m11-payments", full=True)
+    page.goto(BASE + "#/raporlar"); page.wait_for_timeout(700)
+    shot(page, "m12-reports", full=True)
+    page.goto(BASE + "#/yardim"); page.wait_for_timeout(400)
+    page.get_by_role("tab", name="iPhone").click(); page.wait_for_timeout(300)
+    shot(page, "m13-help-iphone", full=True)
+    # yatay taşma kontrolü
+    overflow = {}
+    for r in ["#/", "#/takvim", "#/bugun", "#/danisanlar", "#/odemeler", "#/paketler", "#/gelir-gider", "#/raporlar", "#/gorevler", "#/notlar", "#/bekleme", "#/mesajlar", "#/arsiv", "#/yedekleme", "#/yardim", "#/ayarlar", "#/seanslar"]:
+        page.goto(BASE + r); page.wait_for_timeout(350)
+        w = page.evaluate("document.documentElement.scrollWidth")
+        if w > 392: overflow[r] = w
+    ok("mobilde yatay taşma yok", not overflow, str(overflow))
+    # koyu tema
+    page.goto(BASE + "#/ayarlar?b=gorunum"); page.wait_for_timeout(600)
+    page.get_by_role("button", name="Koyu", exact=True).click(); page.wait_for_timeout(400)
+    page.goto(BASE + "#/"); page.wait_for_timeout(500)
+    ok("koyu tema uygulandı", page.evaluate("document.documentElement.dataset.theme") == "dark")
+    shot(page, "m14-dark-dashboard")
+    page.goto(BASE + "#/takvim"); page.wait_for_timeout(600)
+    shot(page, "m15-dark-calendar")
+    # demodan çık: gerçek veritabanı ayrı kalmalı
+    page.goto(BASE + "#/"); page.wait_for_timeout(300)
+    page.get_by_role("button", name="Demodan çık").click()
+    page.wait_for_timeout(1500)
+    ok("demodan çıkınca gerçek (boş) kurulum ekranı", page.get_by_test_id("setup-start").count() == 1)
+    dbs = page.evaluate("indexedDB.databases().then(l => l.map(d => d.name))")
+    ok("demo veritabanı silindi, gerçek veri karışmadı", "dkt-ofis-demo" not in dbs, str(dbs))
+    ctx.close()
+    print("KONSOL HATALARI:", errors[:10])
+    print(f"{sum(r[1] for r in results)}/{len(results)} geçti")
