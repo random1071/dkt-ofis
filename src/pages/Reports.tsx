@@ -2,11 +2,12 @@ import { useMemo, useState } from 'react';
 import { Download, Printer, TrendingDown, TrendingUp } from 'lucide-react';
 import { useDB, useSettings } from '../lib/store';
 import { addDays, addMonths, eachDay, endOfMonth, fmtDate, fmtDateShort, fmtMonth, startOfMonth } from '../lib/dates';
-import { periodFinance, periodSessions, totalReceivables, packageRemaining, packageState } from '../lib/finance';
+import { cancellationImpact, periodFinance, periodSessions, totalReceivables, packageRemaining, packageState } from '../lib/finance';
 import { csvNumber, downloadText, fmtMoney, fmtPercent, toCSV } from '../lib/format';
 import { BarList, ComboChart, Donut } from '../components/charts';
 import { makePeriod, PeriodPicker, periodLabel, previousPeriod, type Period } from '../components/PeriodPicker';
 import { confirmDialog, Segmented } from '../components/ui';
+import { openReport } from '../components/Clinical';
 
 function Delta({ cur, prev, money = true, invert = false, pct = false }: { cur: number; prev: number; money?: boolean; invert?: boolean; pct?: boolean }) {
   if (!prev && !cur) return <span className="xs faint">—</span>;
@@ -31,6 +32,7 @@ export function ReportsPage() {
   const f = periodFinance(db, period.from, period.to);
   const fp = periodFinance(db, prevP.from, prevP.to);
   const ss = periodSessions(db, period.from, period.to);
+  const ci = useMemo(() => cancellationImpact(db, period.from, period.to), [db, period]);
   const sp = periodSessions(db, prevP.from, prevP.to);
 
   const trend = useMemo(() => {
@@ -127,9 +129,10 @@ export function ReportsPage() {
     <div>
       <div className="page-head">
         <div><h2>Raporlar</h2><p>{periodLabel(period)} · karşılaştırma: {periodLabel(prevP)}</p></div>
-        <div className="row no-print">
+        <div className="row wrap no-print">
           <button className="btn ghost" onClick={exportCSV}><Download /> CSV</button>
-          <button className="btn" onClick={() => window.print()} title="Yazdır veya PDF olarak kaydet"><Printer /> Yazdır / PDF</button>
+          <button className="btn" onClick={() => openReport('finance', { bas: period.from, bit: period.to })} title="Gelir-gider raporunu PDF olarak kaydet" data-testid="finance-pdf"><Printer /> Gelir-gider PDF</button>
+          <button className="btn ghost" onClick={() => window.print()} title="Bu ekranı yazdır"><Printer /> Ekranı yazdır</button>
         </div>
       </div>
       <div className="print-only mb-4"><div className="serif" style={{ fontSize: '1.6rem' }}>{s.officeName} — Rapor</div><div>{periodLabel(period)} ({fmtDate(period.from)} – {fmtDate(period.to)})</div></div>
@@ -157,6 +160,13 @@ export function ReportsPage() {
         <div className="card stat"><div className="label">Ortalama seans ücreti</div><div className="value">{fmtMoney(ss.avgFee)}</div><Delta cur={ss.avgFee} prev={sp.avgFee} /></div>
         <div className="card stat"><div className="label">İptal oranı</div><div className="value">{fmtPercent(ss.cancellationRate)}</div><Delta cur={ss.cancellationRate} prev={sp.cancellationRate} pct invert /></div>
         <div className="card stat"><div className="label">Gelmeme oranı</div><div className="value">{fmtPercent(ss.noShowRate)}</div><Delta cur={ss.noShowRate} prev={sp.noShowRate} pct invert /></div>
+      </div>
+
+      <div className="card card-pad mb-4 row wrap gap-4" data-testid="cancel-impact">
+        <div className="grow" style={{ minWidth: 220 }}><div className="small strong">İptallerin finansal etkisi</div><div className="xs faint">{ci.cancelled} iptal, {ci.noshow} gelmeme. Paketli seanslar paket seans değeriyle hesaplanır.</div></div>
+        <div><div className="xs faint">Planlanan değer</div><b className="num">{fmtMoney(ci.plannedValue)}</b></div>
+        <div><div className="xs faint">Ücretlendirilen</div><b className="num">{fmtMoney(ci.charged)}</b></div>
+        <div><div className="xs faint">Kaybedilen gelir</div><b className="num danger-text">{fmtMoney(ci.lost)}</b></div>
       </div>
 
       <div className="grid-2 mb-4" style={{ alignItems: 'start' }}>

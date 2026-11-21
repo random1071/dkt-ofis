@@ -9,6 +9,7 @@ import './styles.css';
 import App from './App';
 import { boot, onUnlocked } from './lib/store';
 import { initAutoBackup } from './lib/backup';
+import { initNotifier } from './lib/notify';
 import { extendSeries, generateRecurringExpenses } from './lib/actions';
 import './lib/install';
 
@@ -20,6 +21,7 @@ if (window.top !== window.self) {
 }
 
 initAutoBackup();
+initNotifier();
 // Açılışta: tekrarlayan randevuları ileri uzat, zamanı gelen düzenli giderleri ekle
 onUnlocked(async () => {
   await extendSeries();

@@ -17,6 +17,8 @@ import { ArchivePage, NotesPage, TasksPage, TemplatesPage, WaitingPage } from '.
 import { BackupPage } from './pages/Backup';
 import { HelpPage } from './pages/Help';
 import { SettingsPage } from './pages/Settings';
+import { ClinicalTemplatesPage } from './pages/ClinicalTemplates';
+import { PrintReportPage } from './pages/PrintReport';
 import { BrandMark } from './components/Brand';
 import { startTour } from './components/Tour';
 
@@ -59,6 +61,8 @@ function Router() {
   if (path === '/gorevler') return <TasksPage />;
   if (path === '/notlar') return <NotesPage />;
   if (path === '/mesajlar') return <TemplatesPage />;
+  if (path === '/sablonlar') return <ClinicalTemplatesPage />;
+  if (path === '/rapor') return <PrintReportPage />;
   if (path === '/arsiv') return <ArchivePage />;
   if (path === '/yedekleme') return <BackupPage />;
   if (path === '/yardim') return <HelpPage />;

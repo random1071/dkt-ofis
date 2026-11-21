@@ -17,6 +17,7 @@ import { MessageDialog, NoteForm, TaskForm } from '../components/MiscForms';
 import { Empty, Money, navigate, openModal, Stat } from '../components/ui';
 import { ComboChart } from '../components/charts';
 import { startTour } from '../components/Tour';
+import { OfficeSummary, SessionNoteEditor } from '../components/Clinical';
 import { useBackupState } from '../lib/backup';
 
 export function Dashboard() {
@@ -85,6 +86,8 @@ export function Dashboard() {
   const openings = openingsWithWaiting(db, s, 7);
   if (openings.length) reminders.push({ icon: <Hourglass />, tone: 'info', text: <>Önümüzdeki günlerde boş saatlere uygun <b>{new Set(openings.flatMap((o) => o.matches.map((m) => m.id))).size}</b> bekleme listesi kaydı var.</>, action: () => navigate('/bekleme'), actionLabel: 'Eşleştir' });
   const backupDue = !st.demo && db.clients.size > 0 && (!bs.lastExportAt || Date.now() - Date.parse(bs.lastExportAt) > s.backup.exportReminderDays * 86400_000);
+  const draftNotes = Array.from(db.sessionNotes.values()).filter((n) => !n.deletedAt && n.status === 'draft');
+  if (draftNotes.length) reminders.push({ icon: <NotebookPen />, tone: 'info', text: <><b>{draftNotes.length}</b> seans notu taslak olarak bekliyor.</>, action: () => openModal(<SessionNoteEditor id={draftNotes.sort((x, y) => (x.updatedAt < y.updatedAt ? 1 : -1))[0].id} />), actionLabel: 'Son taslağı aç' });
   if (backupDue) reminders.push({ icon: <HardDriveDownload />, tone: 'warn', text: bs.lastExportAt ? <>Son yedek dosyası {fmtDate(bs.lastExportAt.slice(0, 10))} tarihinde alındı. Yeni bir yedeği cihaz dışına kaydetmeniz önerilir.</> : <>Henüz yedek dosyası dışa aktarılmadı. Cihaz kaybına karşı bir yedeği cihaz dışına kaydedin.</>, action: () => navigate('/yedekleme'), actionLabel: 'Yedekle' });
   if (bs.lastAutoError) reminders.push({ icon: <ShieldAlert />, tone: 'danger', text: <>Son otomatik yedek başarısız oldu.</>, action: () => navigate('/yedekleme'), actionLabel: 'İncele' });
   if (st.persisted === false && !st.demo) reminders.push({ icon: <ShieldAlert />, tone: 'warn', text: <>Tarayıcı kalıcı depolama iznini vermedi; cihazda yer azalırsa veriler silinebilir. Uygulamayı ana ekrana yükleyip düzenli yedek almanız önerilir.</>, action: () => retryPersistence(), actionLabel: 'Tekrar iste' });
@@ -138,6 +141,8 @@ export function Dashboard() {
         <Stat label="Bugün beklenen" icon={<CircleDollarSign />} value={fmtMoney(expectedIncomeForDay(db, t))} hint={`Tahsil edilen: ${fmtMoney(cashForDay(db, t))}`} />
         <Stat label="Açık alacak" icon={<Wallet />} value={fmtMoney(receivables)} tone={receivables > 0 ? 'danger' : undefined} hint={overdue.length ? `${overdue.length} gecikmiş kalem` : 'Gecikmiş ödeme yok'} onClick={() => navigate('/odemeler?t=acik')} />
       </div>
+
+      <OfficeSummary />
 
       <div className="grid" style={{ gridTemplateColumns: 'minmax(0, 1.35fr) minmax(0, 1fr)', alignItems: 'start' }} data-dash-grid>
         <div className="col gap-4">

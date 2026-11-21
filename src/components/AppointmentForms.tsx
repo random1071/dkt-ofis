@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import {
   AlertTriangle, CalendarClock, CalendarX2, Check, CheckCircle2, Clock, CreditCard, History, MessageCircle, MoreHorizontal,
   Pencil, Repeat, Trash2, UserX, Wallet, Package as PackageIcon, Sparkles, Archive,
+  NotebookPen, CalendarPlus,
 } from 'lucide-react';
 import { getSettings, useDB, useSettings } from '../lib/store';
 import * as A from '../lib/actions';
@@ -15,6 +16,9 @@ import {
 } from '../lib/finance';
 import { fmtMoney, waLink } from '../lib/format';
 import { REMINDER_LABEL } from '../lib/defaults';
+import { noteForAppointment, noteText } from '../lib/clinical';
+import { openSessionNote } from './Clinical';
+import { downloadICS } from '../lib/ics';
 import type { Appointment, BillingMode, RecurrenceFreq } from '../lib/types';
 import {
   attempt, ClientSelect, confirmDialog, Dropdown, Field, Modal, MoneyInput, num, openModal, PayBadge, promptDialog, Segmented,
@@ -335,7 +339,7 @@ export function AppointmentForm({ appt, initial }: { appt?: Appointment; initial
             </select>
           </Field>
         )}
-        <Field label="Hatırlatma" hint="Uygulama otomatik mesaj göndermez. Hatırlatma zamanı gelen randevular Genel Bakış ekranında listelenir; tek dokunuşla WhatsApp mesajı hazırlayabilirsiniz.">
+        <Field label="Danışana hatırlatma (WhatsApp)" hint="Uygulama danışana otomatik mesaj göndermez. Zamanı gelen randevular Genel Bakış ekranında listelenir; tek dokunuşla WhatsApp mesajı hazırlayıp kendiniz gönderirsiniz. Kendi cihazınıza gelen bildirimler Ayarlar → Bildirimler'dedir.">
           <select className="select" value={reminder} onChange={(e) => setReminder(e.target.value)}>
             {Object.entries(REMINDER_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
           </select>
@@ -365,6 +369,7 @@ export function AppointmentDetail({ id }: { id: string }) {
   const series = a.seriesId ? db.series.get(a.seriesId) : undefined;
   const isPast = a.end < nowLocal();
   const next = a.rescheduledToId ? db.appointments.get(a.rescheduledToId) : undefined;
+  const sNote = noteForAppointment(a.id, db);
 
   const msg = (key: string) => openModal(<MessageDialog clientId={a.clientId} appointmentId={a.id} templateKey={key} />);
 
@@ -436,13 +441,21 @@ export function AppointmentDetail({ id }: { id: string }) {
             )}
           </dd>
           {c?.phone && (<><dt>Telefon</dt><dd><a href={`tel:${c.phone}`}>{c.phone}</a></dd></>)}
-          {a.reminder && a.reminder !== 'none' && (<><dt>Hatırlatma</dt><dd>{REMINDER_LABEL[a.reminder]}</dd></>)}
+          {a.reminder && a.reminder !== 'none' && (<><dt>Danışana hatırlatma</dt><dd>{REMINDER_LABEL[a.reminder]} <span className="faint">(WhatsApp, elle)</span></dd></>)}
           {series && (<><dt>Seri</dt><dd className="small">{describeSeries(series)}{series.ended ? ' · sonlandırıldı' : ''}</dd></>)}
           {a.cancelReason && (<><dt>Neden</dt><dd>{a.cancelReason}</dd></>)}
           {next && (<><dt>Yeni randevu</dt><dd><button className="link-btn" onClick={() => { close(); openModal(<AppointmentDetail id={next.id} />); }}>{fmtDateTime(next.start)}</button></dd></>)}
           {a.notes && (<><dt>Not</dt><dd style={{ whiteSpace: 'pre-wrap' }}>{a.notes}</dd></>)}
-          {a.sessionNote && (<><dt>Seans notu</dt><dd style={{ whiteSpace: 'pre-wrap' }}>{a.sessionNote}</dd></>)}
+          {a.sessionNote && !sNote && (<><dt>Kısa not</dt><dd style={{ whiteSpace: 'pre-wrap' }}>{a.sessionNote}</dd></>)}
+          {sNote && (<><dt>Seans notu</dt><dd><button className="link-btn" onClick={() => openSessionNote({ clientId: a.clientId, noteId: sNote.id })}>{sNote.templateName ?? 'Not'}{sNote.status === 'draft' ? ' (taslak)' : ''}</button><div className="small muted" style={{ whiteSpace: 'pre-wrap', maxHeight: 96, overflow: 'hidden' }}>{noteText(sNote)}</div></dd></>)}
         </dl>
+        {a.status !== 'planned' && a.status !== 'postponed' && (
+          <div className="row wrap">
+            <button className="btn sm" onClick={() => openSessionNote({ clientId: a.clientId, appointmentId: a.id, noteId: sNote?.id })} data-testid="appt-session-note"><NotebookPen /> {sNote ? 'Seans notunu aç' : 'Seans notu yaz'}</button>
+            <button className="btn sm ghost" onClick={() => downloadICS([a], c?.name)}><CalendarPlus /> Takvime ekle</button>
+          </div>
+        )}
+        {a.status === 'planned' && <div className="row wrap"><button className="btn sm ghost" onClick={() => downloadICS([a], c?.name)} data-testid="appt-ics"><CalendarPlus /> Telefon takvimine ekle</button></div>}
 
         {a.status === 'planned' && (
           <div className="row wrap">
@@ -496,6 +509,7 @@ export function CompleteDialog({ id }: { id: string }) {
   const remaining = pkg ? packageRemaining(db, pkg.id) + (a.packageCreditUsed ? 1 : 0) : 0;
   const [charge, setCharge] = useState<number | ''>(a.fee);
   const [note, setNote] = useState(a.sessionNote ?? '');
+  const [writeNote, setWriteNote] = useState(false);
   const [payNow, setPayNow] = useState(false);
   const [amount, setAmount] = useState<number | ''>(a.fee);
   const [method, setMethod] = useState(a.paymentMethod ?? s.paymentMethods[0]);
@@ -515,6 +529,7 @@ export function CompleteDialog({ id }: { id: string }) {
     }, payNow && !isPackage ? 'Seans tamamlandı ve ödeme kaydedildi' : 'Seans tamamlandı');
     if (r) {
       close();
+      if (writeNote) void openSessionNote({ clientId: a.clientId, appointmentId: a.id });
     }
   }
   return (
@@ -552,9 +567,10 @@ export function CompleteDialog({ id }: { id: string }) {
             )}
           </>
         )}
-        <Field label="Kısa seans notu (idari)" help="Klinik dokümantasyon yerine geçmez; kısa hatırlatmalar içindir.">
+        <Field label="Kısa not (isteğe bağlı)" help="Ayrıntılı not için aşağıdaki kutuyu işaretleyin; şablonlu seans notu açılır.">
           <textarea className="textarea" value={note} onChange={(e) => setNote(e.target.value)} placeholder="Örn. ev ödevi verildi" />
         </Field>
+        <label className="check"><input type="checkbox" checked={writeNote} onChange={(e) => setWriteNote(e.target.checked)} data-testid="complete-write-note" /> Kaydettikten sonra seans notu yaz</label>
       </div>
     </Modal>
   );

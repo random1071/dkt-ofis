@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import {
   Archive, ArchiveRestore, CalendarPlus, ChevronLeft, MessageCircle, MoreHorizontal, Package as PackageIcon, Pencil, Phone, Plus, Trash2,
   UserPlus, Users, Wallet, NotebookPen, ListTodo, Undo2, Download,
+  Printer,
 } from 'lucide-react';
 import { useDB } from '../lib/store';
 import * as A from '../lib/actions';
@@ -132,7 +133,7 @@ export function ClientsPage() {
   );
 }
 
-type Tab = 'overview' | 'appts' | 'history' | 'payments' | 'packages' | 'notes' | 'log';
+type Tab = 'overview' | 'appts' | 'history' | 'snotes' | 'goals' | 'homework' | 'forms' | 'files' | 'timeline' | 'payments' | 'packages' | 'notes' | 'log';
 
 export function ClientDetailPage({ id }: { id: string }) {
   const db = useDB();
@@ -193,7 +194,10 @@ export function ClientDetailPage({ id }: { id: string }) {
                   <button onClick={() => { cl(); openModal(<PackageForm clientId={c.id} />); }}><PackageIcon /> Paket oluştur</button>
                   <button onClick={() => { cl(); openModal(<RefundForm clientId={c.id} />); }}><Undo2 /> İade kaydet</button>
                   <button onClick={() => { cl(); openModal(<TaskForm clientId={c.id} />); }}><ListTodo /> Görev ekle</button>
-                  <button onClick={() => { cl(); openModal(<NoteForm clientId={c.id} />); }}><NotebookPen /> Not ekle</button>
+                  <button onClick={() => { cl(); openSessionNote({ clientId: c.id }); }}><NotebookPen /> Seans notu yaz</button>
+                  <button onClick={() => { cl(); openModal(<NoteForm clientId={c.id} />); }}><NotebookPen /> Genel not ekle</button>
+                  <button onClick={() => { cl(); openReport('client-file', { client: c.id }); }}><Printer /> Danışan dosyası (PDF)</button>
+                  <button onClick={() => { cl(); exportClientData(c.id); }}><Download /> Danışan verilerini dışa aktar</button>
                   <div className="sep" />
                   {c.archived ? (
                     <button onClick={() => { cl(); attempt(() => A.archiveClient(c.id, false), 'Danışan arşivden çıkarıldı'); }}><ArchiveRestore /> Arşivden çıkar</button>
@@ -208,7 +212,7 @@ export function ClientDetailPage({ id }: { id: string }) {
                   {c.archived && !c.anonymizedAt && A.clientHasHistory(c.id) && (
                     <button className="danger" onClick={async () => {
                       cl();
-                      const ok = await confirmDialog({ title: 'Kişisel bilgileri kalıcı olarak sil (anonimleştir)', danger: true, confirmText: 'Devam et', message: <>Ad, telefon, e-posta, doğum tarihi, veli ve acil durum bilgileri, hizmet alanı, idari notlar, seans notları ve danışana bağlı notlar <b>kalıcı olarak silinir</b>; işlem geçmişindeki adı da "Anonim danışan" olarak değiştirilir. Muhasebe tutarlılığı için tutarlar ve tarihler korunur. <b>Geri alınamaz.</b><br /><br />Bu işlemden önce alınmış yedek dosyaları ve cihaz içi yedekler eski bilgileri içermeye devam eder; gerekirse onları da silin.</> });
+                      const ok = await confirmDialog({ title: 'Kişisel bilgileri kalıcı olarak sil (anonimleştir)', danger: true, confirmText: 'Devam et', message: <>Ad, telefon, e-posta, doğum tarihi, veli ve acil durum bilgileri, hizmet alanı, idari notlar, seans notları (sürümleri ve silinenler dahil), hedefler ve ölçümler, ev çalışmaları, formlar, belge ve fotoğraflar ve danışana bağlı notlar <b>kalıcı olarak silinir</b>; işlem geçmişindeki adı da "Anonim danışan" olarak değiştirilir. Muhasebe tutarlılığı için tutarlar ve tarihler korunur. <b>Geri alınamaz.</b><br /><br />Bu işlemden önce alınmış yedek dosyaları ve cihaz içi yedekler eski bilgileri içermeye devam eder; gerekirse onları da silin.</> });
                       if (!ok) return;
                       const w = await promptDialog({ label: 'Onay', message: 'Onaylamak için büyük harflerle SİL yazın.', required: true, confirmText: 'Kalıcı olarak anonimleştir' });
                       if (w?.toLocaleUpperCase('tr') !== 'SİL') return;
@@ -239,9 +243,15 @@ export function ClientDetailPage({ id }: { id: string }) {
           { id: 'overview', label: 'Genel Bakış' },
           { id: 'appts', label: 'Randevular', count: future.length },
           { id: 'history', label: 'Seans Geçmişi', count: past.length },
+          { id: 'snotes', label: 'Seans Notları', count: C.clientSessionNotes(id, db).length },
+          { id: 'goals', label: 'Hedefler (BEP)', count: C.clientGoals(id, db).filter((g) => g.status === 'active').length },
+          { id: 'homework', label: 'Ev Çalışmaları', count: C.clientHomework(id, db).filter((h) => h.status === 'open').length },
+          { id: 'forms', label: 'Formlar', count: C.clientForms(id, db).length },
+          { id: 'files', label: 'Belgeler', count: C.clientAttachments(id, db).length },
+          { id: 'timeline', label: 'Zaman Çizelgesi' },
           { id: 'payments', label: 'Ödemeler', count: payments.length },
           { id: 'packages', label: 'Paketler', count: packages.length },
-          { id: 'notes', label: 'Notlar', count: notes.length },
+          { id: 'notes', label: 'Genel Notlar', count: notes.length },
           { id: 'log', label: 'İşlem Geçmişi' },
         ]}
       />
@@ -288,6 +298,7 @@ export function ClientDetailPage({ id }: { id: string }) {
                 </div>
               );
             })}
+            <ClientPeriodSummary clientId={id} />
             {tasks.length > 0 && (
               <div className="card">
                 <div className="card-head"><h3>Açık görevler</h3></div>
@@ -373,6 +384,13 @@ export function ClientDetailPage({ id }: { id: string }) {
         </div>
       )}
 
+      {tab === 'snotes' && <ClientSessionNotesTab clientId={id} />}
+      {tab === 'goals' && <GoalsTab clientId={id} />}
+      {tab === 'homework' && <HomeworkTab clientId={id} />}
+      {tab === 'forms' && <FormsTab clientId={id} />}
+      {tab === 'files' && <FilesTab clientId={id} />}
+      {tab === 'timeline' && <TimelineTab clientId={id} />}
+
       {tab === 'notes' && (
         <div className="col gap-3">
           <div className="row end"><button className="btn primary sm" onClick={() => openModal(<NoteForm clientId={c.id} />)}><Plus /> Not ekle</button></div>
@@ -401,6 +419,9 @@ export function ClientDetailPage({ id }: { id: string }) {
 }
 
 import { AppointmentDetail } from '../components/AppointmentForms';
+import * as C from '../lib/clinical';
+import { ClientPeriodSummary, ClientSessionNotesTab, FilesTab, FormsTab, GoalsTab, HomeworkTab, openReport, openSessionNote, TimelineTab } from '../components/Clinical';
+import { exportClientData } from '../components/ClientExport';
 function ApptDetailLazy({ id }: { id: string }) {
   return <AppointmentDetail id={id} />;
 }

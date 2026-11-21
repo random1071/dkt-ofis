@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import {
-  Ban, Building2, Clock, KeyRound, Lock, Palette, Pencil, Plus, ShieldCheck, Sparkles, Trash2, Wallet, X, CalendarDays, HardDriveDownload, Power, Copy, Info,
+  Ban, Building2, Clock, KeyRound, Lock, Palette, Pencil, Plus, ShieldCheck, Sparkles, Trash2, Wallet, X, CalendarDays, HardDriveDownload, Power, Copy, Info, Bell, Mic,
 } from 'lucide-react';
 import {
   changePassword, disablePassword, enablePassword, enterDemo, exitDemo, getSettings, getState, lock, regenerateRecovery, updateSettings, useAppState, useDB, useSettings, verifyPassword, REAL_DB,
@@ -17,6 +17,7 @@ import { toast } from '../lib/toast';
 import { copyText } from '../lib/format';
 import { wipeDatabase } from '../lib/idb';
 import { APP_VERSION } from '../lib/backup';
+import { NotificationSettingsCard } from '../components/NotificationSettings';
 
 function Section({ id, icon, title, children, desc }: { id: string; icon: React.ReactNode; title: string; children: React.ReactNode; desc?: string }) {
   return (
@@ -70,7 +71,7 @@ export function SettingsPage() {
   const externals = Array.from(db.external.values()).filter((e) => !e.archived).sort((a, b) => (a.startDate < b.startDate ? -1 : 1));
 
   const nav = [
-    ['genel', 'Genel'], ['seans', 'Seans'], ['calisma', 'Çalışma saatleri'], ['dis-kurum', 'Dış kurum'], ['odeme', 'Ödeme & kategoriler'], ['politika', 'Politikalar'], ['gorunum', 'Görünüm'], ['guvenlik', 'Güvenlik'], ['yedek', 'Yedekleme'], ['yardim', 'Rehber & demo'],
+    ['genel', 'Genel'], ['seans', 'Seans'], ['calisma', 'Çalışma saatleri'], ['dis-kurum', 'Dış kurum'], ['odeme', 'Ödeme & kategoriler'], ['politika', 'Politikalar'], ['gorunum', 'Görünüm'], ['bildirim', 'Bildirimler'], ['guvenlik', 'Güvenlik'], ['yedek', 'Yedekleme'], ['yardim', 'Rehber & demo'],
   ];
 
   return (
@@ -188,6 +189,10 @@ export function SettingsPage() {
           </div>
         </Section>
 
+        <Section id="bildirim" icon={<Bell />} title="Bildirimler" desc="Yalnızca sizin cihazınıza · danışana mesaj gönderilmez">
+          <NotificationSettingsCard />
+        </Section>
+
         <Section id="guvenlik" icon={<Lock />} title="Güvenlik">
           {st.demo ? <div className="small muted">Demo modunda güvenlik ayarları devre dışıdır.</div> : !st.passwordMode ? (
             <div className="col gap-4">
@@ -230,6 +235,15 @@ export function SettingsPage() {
               <div className="callout info small"><Info /><div className="callout-body">Verileriniz cihazınızda AES-256 ile şifrelenir; şifreniz düz metin olarak saklanmaz. Bu, sunucu tarafında yönetilen profesyonel bir kimlik doğrulama sistemiyle aynı güvenliği sağlamaz: cihazınızın kilidi ve tarayıcı güvenliği de önemlidir. Cihazınızı ekran kilidiyle korumanızı öneririz.</div></div>
             </div>
           )}
+        </Section>
+
+        <Section id="ses" icon={<Mic />} title="Konuşarak yazma" desc="Seans notu ekranındaki mikrofon düğmesi">
+          <div className="col gap-3 small" style={{ lineHeight: 1.55 }}>
+            <p className="muted">Konuşma, tarayıcının yerleşik özelliğiyle metne çevrilir. DKT Ofis ses kaydı saklamaz. Cihaz üzerinde çalışmayan tarayıcılarda ses, metne çevrilmek üzere tarayıcının sağlayıcısına (Apple, Google veya Microsoft) gidebilir; bu durumda mikrofon ilk kez açılmadan önce bilgilendirme gösterilir.</p>
+            {s.speechConsentAt ? (
+              <div className="row wrap gap-2"><span>Bilgilendirme kabul edildi: {fmtDateTime(s.speechConsentAt)}</span><button className="btn sm" onClick={() => save({ speechConsentAt: undefined }, 'Onay geri alındı; mikrofon açılmadan önce yeniden sorulacak')}>Onayı geri al</button></div>
+            ) : <span className="faint">Henüz onay verilmedi.</span>}
+          </div>
         </Section>
 
         <Section id="yedek" icon={<HardDriveDownload />} title="Yedekleme ayarları">

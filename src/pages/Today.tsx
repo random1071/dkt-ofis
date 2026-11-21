@@ -1,5 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Building2, CalendarPlus, CalendarX2, Check, ChevronLeft, ChevronRight, Printer, Receipt, UserX, Wallet, MessageCircle, NotebookPen } from 'lucide-react';
+import { openSessionNote } from '../components/Clinical';
+import { noteForAppointment } from '../lib/clinical';
 import { useDB } from '../lib/store';
 import { addDays, dateOf, diffMinutes, fmtDate, nowLocal, timeOf, today } from '../lib/dates';
 import { appointmentOutstanding, appointmentPayStatus, cashForDay, expensesForDay, packageRemaining } from '../lib/finance';
@@ -92,7 +94,7 @@ export function Today() {
                     )}
                     {out > 0 && <button className="btn sm primary" onClick={() => openModal(<PaymentForm clientId={a.clientId} focusItem={{ type: 'appointment', id: a.id }} />)}><Wallet /> Ödeme al · {fmtMoney(out)}</button>}
                     {a.status !== 'planned' && a.status !== 'postponed' && (
-                      <button className="btn sm ghost" onClick={async () => { const n = await promptDialog({ label: 'Kısa seans notu', initial: a.sessionNote ?? '', multiline: true }); if (n !== null) attempt(() => A.updateAppointment(a.id, { sessionNote: n }, 'one'), 'Not kaydedildi'); }}><NotebookPen /> Not</button>
+                      <button className="btn sm ghost" onClick={() => openSessionNote({ clientId: a.clientId, appointmentId: a.id })} data-testid="today-note"><NotebookPen /> {noteForAppointment(a.id, db) ? 'Notu aç' : 'Seans notu'}</button>
                     )}
                   </div>
                 </div>

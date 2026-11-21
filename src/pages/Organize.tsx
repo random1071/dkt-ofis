@@ -227,7 +227,7 @@ export function TemplatesPage() {
   return (
     <div>
       <div className="page-head">
-        <div><h2>Mesaj şablonları</h2><p>Kopyala veya WhatsApp'ta hazır mesaj olarak aç. Hiçbir mesaj otomatik gönderilmez.</p></div>
+        <div><h2>Mesaj şablonları</h2><p>Kopyala veya WhatsApp'ta hazır mesaj olarak aç. Hiçbir mesaj otomatik gönderilmez. Şablonlara tanı, sağlık bilgisi veya seans notu yazmayın.</p></div>
         <div className="row">
           <button className="btn ghost" onClick={async () => {
             if (!(await confirmDialog({ title: 'Varsayılan şablonları ekle', message: 'Eksik olan varsayılan şablonlar yeniden eklenir. Düzenlediğiniz şablonlar değişmez.', confirmText: 'Ekle' }))) return;
@@ -274,6 +274,11 @@ export function ArchivePage() {
     ...Array.from(db.waiting.values()).filter((x) => x.archived).map((x) => ({ t: 'waiting' as const, id: x.id, label: `Bekleme listesi · ${x.name}` })),
     ...Array.from(db.templates.values()).filter((x) => x.archived).map((x) => ({ t: 'templates' as const, id: x.id, label: `Şablon · ${x.title}` })),
     ...Array.from(db.blocks.values()).filter((x) => x.archived).map((x) => ({ t: 'blocks' as const, id: x.id, label: `Kapalı zaman · ${x.label}` })),
+    ...Array.from(db.goals.values()).filter((x) => x.archived).map((x) => ({ t: 'goals' as const, id: x.id, label: `${x.kind === 'long' ? 'Amaç' : 'Hedef'} · ${x.title} · ${db.clients.get(x.clientId)?.name ?? ''}` })),
+    ...Array.from(db.homework.values()).filter((x) => x.archived).map((x) => ({ t: 'homework' as const, id: x.id, label: `Ev çalışması · ${x.title} · ${db.clients.get(x.clientId)?.name ?? ''}` })),
+    ...Array.from(db.formResponses.values()).filter((x) => x.archived).map((x) => ({ t: 'formResponses' as const, id: x.id, label: `Form · ${x.templateName} · ${db.clients.get(x.clientId)?.name ?? ''}` })),
+    ...Array.from(db.noteTemplates.values()).filter((x) => x.archived).map((x) => ({ t: 'noteTemplates' as const, id: x.id, label: `Not şablonu · ${x.name}` })),
+    ...Array.from(db.formTemplates.values()).filter((x) => x.archived).map((x) => ({ t: 'formTemplates' as const, id: x.id, label: `Form şablonu · ${x.name}` })),
   ];
   const activity = Array.from(db.activity.values()).filter((x) => matchText(q, x.summary)).sort((a, b) => (a.at < b.at ? 1 : -1));
   const restoreBtn = (fn: () => Promise<unknown>) => <button className="btn sm" onClick={() => attempt(fn, 'Arşivden geri alındı')}><ArchiveRestore /> Geri al</button>;

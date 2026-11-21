@@ -3,6 +3,7 @@ import {
   Archive, BarChart3, CalendarDays, CalendarRange, CircleHelp, ClipboardList, HardDriveDownload, Home, ListTodo, Lock, Menu,
   MessageSquareText, NotebookPen, Package as PackageIcon, Plus, Receipt, Search, Settings as SettingsIcon, Sun, Users, Wallet,
   Hourglass, WifiOff, User, CalendarPlus, UserPlus, FileText, Building2,
+  ClipboardCheck,
 } from 'lucide-react';
 import { exitDemo, lock, useAppState, useDB, useSettings } from '../lib/store';
 import { matchText, Modal, navigate, openModal, useCloseModal, useRoute } from './ui';
@@ -10,6 +11,7 @@ import { BrandMark } from './Brand';
 import { fmtDate, fmtDateTime, today } from '../lib/dates';
 import { fmtMoney } from '../lib/format';
 import { openItems } from '../lib/finance';
+import { SessionNoteEditor } from './Clinical';
 import { AppointmentDetail, AppointmentForm } from './AppointmentForms';
 import { PackageDetail, PaymentDetail, ExpenseForm, PaymentForm } from './FinanceForms';
 import { NoteForm, QuickAddSheet, TaskForm, WaitingForm } from './MiscForms';
@@ -38,6 +40,7 @@ export const NAV: NavItem[] = [
   { path: '/gorevler', label: 'Görevler', icon: <ListTodo />, group: 'Düzen' },
   { path: '/notlar', label: 'Notlar', icon: <NotebookPen />, group: 'Düzen' },
   { path: '/mesajlar', label: 'Mesaj Şablonları', icon: <MessageSquareText />, group: 'Düzen' },
+  { path: '/sablonlar', label: 'Not ve Form Şablonları', icon: <ClipboardCheck />, group: 'Düzen' },
   { path: '/arsiv', label: 'Arşiv', icon: <Archive />, group: 'Düzen' },
   { path: '/yedekleme', label: 'Yedekleme', icon: <HardDriveDownload />, group: 'Sistem', tour: 'nav-backup' },
   { path: '/yardim', label: 'Yardım Merkezi', icon: <CircleHelp />, group: 'Sistem', tour: 'nav-help' },
@@ -279,6 +282,9 @@ export function GlobalSearch() {
     push(Array.from(db.tasks.values()).filter((t) => matchText(q, t.title, t.description)).map((t) => ({ group: 'Görevler', icon: <ListTodo />, title: t.title, sub: t.dueDate ? fmtDate(t.dueDate) : undefined, run: go(() => openModal(<TaskForm task={t} />)) })));
     push(Array.from(db.notes.values()).filter((n) => matchText(q, n.title, n.body)).map((n) => ({ group: 'Notlar', icon: <FileText />, title: n.title || n.body.slice(0, 60), run: go(() => openModal(<NoteForm note={n} />)) })));
     push(Array.from(db.waiting.values()).filter((w) => matchText(q, w.name, w.phone)).map((w) => ({ group: 'Bekleme listesi', icon: <Hourglass />, title: w.name, sub: w.phone, run: go(() => openModal(<WaitingForm entry={w} />)) })));
+    push(Array.from(db.sessionNotes.values()).filter((n) => !n.deletedAt && matchText(q, cname(n.clientId), n.templateName, fmtDate(n.date), ...Object.values(n.values))).sort((a, b) => (a.date < b.date ? 1 : -1)).map((n) => ({ group: 'Seans notları', icon: <NotebookPen />, title: `${cname(n.clientId)} · ${fmtDate(n.date)}`, sub: n.templateName, run: go(() => openModal(<SessionNoteEditor id={n.id} />)) })));
+    push(Array.from(db.goals.values()).filter((g) => !g.archived && matchText(q, g.title, g.criterion, cname(g.clientId))).map((g) => ({ group: 'Hedefler', icon: <ClipboardCheck />, title: g.title, sub: cname(g.clientId), run: go(() => navigate(`/danisanlar/${g.clientId}`)) })));
+    push(Array.from(db.homework.values()).filter((h) => !h.archived && matchText(q, h.title, h.description, cname(h.clientId))).map((h) => ({ group: 'Ev çalışmaları', icon: <ListTodo />, title: h.title, sub: cname(h.clientId), run: go(() => navigate(`/danisanlar/${h.clientId}`)) })));
     return out;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [q, db]);

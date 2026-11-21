@@ -680,3 +680,29 @@ details.faq .faq-body { padding: 0 var(--s5) var(--s4); color: var(--text-2); fo
   .row.wrap > .input-group { flex: 1 1 100%; max-width: none !important; }
   .row.wrap > select.select { flex: 1 1 auto; }
 }
+
+/* ─────────────── PDF raporları ─────────────── */
+.report-sheet { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-md); padding: 28px 32px; max-width: 900px; color: var(--text); font-size: 0.9rem; line-height: 1.5; }
+.report-head { display: flex; justify-content: space-between; gap: 16px; border-bottom: 2px solid var(--text); padding-bottom: 12px; margin-bottom: 14px; flex-wrap: wrap; }
+.report-office { font-family: var(--font-serif, serif); font-size: 1.35rem; font-weight: 600; }
+.report-title { font-size: 1.1rem; font-weight: 650; }
+.report-meta { color: var(--text-3); font-size: 0.78rem; font-weight: 400; }
+.report-client { padding: 8px 0 12px; border-bottom: 1px solid var(--border); margin-bottom: 8px; }
+.report-section { padding: 12px 0; border-bottom: 1px solid var(--border); break-inside: avoid-page; }
+.report-section h3 { font-size: 0.98rem; margin-bottom: 8px; }
+.report-goal { padding: 8px 0 4px; display: flex; flex-direction: column; gap: 6px; }
+.report-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; margin: 6px 0; }
+.report-table th, .report-table td { border: 1px solid var(--border); padding: 4px 8px; text-align: left; vertical-align: top; }
+.report-table th { background: var(--surface-2); font-weight: 600; }
+.report-kv { display: grid; grid-template-columns: max-content 1fr; gap: 4px 16px; margin: 0; }
+.report-kv dt { color: var(--text-3); }
+.report-kv dd { margin: 0; }
+.report-foot { margin-top: 18px; color: var(--text-3); font-size: 0.72rem; }
+@media (max-width: 560px) { .report-sheet { padding: 16px; } }
+@media print {
+  .report-sheet { border: 0; padding: 0; max-width: none; background: #fff; color: #000; }
+  .report-table th { background: #f0f0f0 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .report-meta, .report-foot, .report-kv dt { color: #555; }
+  .update-bar, .modal-backdrop { display: none !important; }
+  @page { margin: 14mm; }
+}
