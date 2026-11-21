@@ -1,0 +1,19 @@
+import { useId, type CSSProperties } from 'react';
+
+/** Uygulama işareti: gül kurusu zemin üzerinde konuşma balonu ve ses dalgaları */
+export function BrandMark({ className, style }: { className?: string; style?: CSSProperties }) {
+  const gid = `bm-${useId().replace(/:/g, '')}`;
+  return (
+    <svg className={className} style={style} viewBox="0 0 64 64" role="img" aria-label="Terapi Ofisi">
+      <defs>
+        <linearGradient id={gid} x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="#c09391" />
+          <stop offset="1" stopColor="#93605e" />
+        </linearGradient>
+      </defs>
+      <rect width="64" height="64" rx="16" fill={`url(#${gid})`} />
+      <path d="M17 20.5c0-2.5 2-4.5 4.5-4.5h21c2.5 0 4.5 2 4.5 4.5v15c0 2.5-2 4.5-4.5 4.5H30l-7.2 6.3c-.8.7-2 .1-2-1V40h0.7c-2.5 0-4.5-2-4.5-4.5z" fill="#fbf4f0" />
+      <path d="M25.5 25.6c1.1 1.4 1.1 3.4 0 4.8M30 22.6c2.6 3.2 2.6 7.6 0 10.8M34.6 19.6c4 4.9 4 11.9 0 16.8" fill="none" stroke="#a46e6b" strokeWidth="2.3" strokeLinecap="round" transform="translate(1.5 -0.5)" />
+    </svg>
+  );
+}
