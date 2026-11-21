@@ -203,7 +203,7 @@ with sync_playwright() as p:
     path = "/home/claude/e2e/backup.json"
     d.save_as(path)
     data = open(path).read()
-    ok("yedek dosyası indirildi ve şifreli", '"format":"ezgi-terapi-ofisi-yedek"' in data and "Test Danışan" not in data and "Kırtasiye" not in data, f"{len(data)} bayt")
+    ok("yedek dosyası indirildi ve şifreli", '"format":"dkt-ofis-yedek"' in data and "Test Danışan" not in data and "Kırtasiye" not in data, f"{len(data)} bayt")
     shot(page, "13-backup")
     counts_before = page.evaluate("""async () => { return null }""")
     ctx.close()
@@ -253,7 +253,7 @@ with sync_playwright() as p:
     ctx.set_offline(False)
     # manifest
     man = page.evaluate("fetch('./manifest.webmanifest').then(r=>r.json())")
-    ok("manifest geçerli", man.get("display") == "standalone" and len(man.get("icons", [])) >= 3 and man.get("name") == "Ezgi — Terapi Ofisi")
+    ok("manifest geçerli", man.get("display") == "standalone" and len(man.get("icons", [])) >= 3 and man.get("name") == "DKT Ofis" and man.get("short_name") == "DKT Ofis")
     ctx.close()
 
     # ── Yedeği başka "cihaza" (temiz profil) geri yükle ──

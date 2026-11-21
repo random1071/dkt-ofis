@@ -12,7 +12,7 @@ export function defaultSettings(now: string): Settings {
     id: 'main',
     createdAt: now,
     updatedAt: now,
-    therapistName: 'Ezgi',
+    therapistName: '',
     officeName: 'Dil ve Konuşma Terapisi Ofisi',
     currency: 'TRY',
     defaultDuration: 45,

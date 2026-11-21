@@ -82,7 +82,7 @@ export function SettingsPage() {
       <div className="col gap-4">
         <Section id="genel" icon={<Info />} title="Genel">
           <div className="form-grid">
-            <Field label="Terapist adı"><input className="input" value={general.therapistName} onChange={(e) => setGeneral({ ...general, therapistName: e.target.value })} /></Field>
+            <Field label="Adınız" help="Karşılamada ve mesaj şablonlarında ({terapist}) kullanılır. Boş bırakılabilir."><input className="input" value={general.therapistName} placeholder="Ad Soyad" onChange={(e) => setGeneral({ ...general, therapistName: e.target.value })} /></Field>
             <Field label="Ofis adı"><input className="input" value={general.officeName} onChange={(e) => setGeneral({ ...general, officeName: e.target.value })} /></Field>
             <Field label="Para birimi" help="Türk lirası (₺)"><input className="input" value="TRY — Türk lirası" disabled /></Field>
             <Field label="Dil ve saat dilimi" help="Tarihler Türkçe biçimde gösterilir"><input className="input" value="Türkçe · Europe/Istanbul" disabled /></Field>
@@ -253,7 +253,7 @@ export function SettingsPage() {
             </div>
           </section>
         )}
-        <div className="xs faint center">Ezgi — Terapi Ofisi · sürüm {APP_VERSION} · tüm veriler bu cihazda</div>
+        <div className="xs faint center">DKT Ofis · sürüm {APP_VERSION} · tüm veriler bu cihazda</div>
       </div>
     </div>
   );

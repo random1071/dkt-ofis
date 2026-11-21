@@ -7,7 +7,7 @@ import {
   unwrapDataKey, uuid, wrapDataKey,
 } from './crypto';
 import {
-  getAllRecords, getMeta, isQuotaError, replaceAllRecords, setMeta, writeRecords,
+  copyDatabaseIfNeeded, getAllRecords, getMeta, isQuotaError, replaceAllRecords, setMeta, writeRecords,
   setDatabaseName, getDatabaseName, type StoredRecord, type VaultMeta,
 } from './idb';
 import { defaultSettings, TEMPLATE_DEFAULTS } from './defaults';
@@ -16,8 +16,12 @@ import { toast } from './toast';
 import { TABLES, type ActivityEntry, type DB, type Settings, type TableName } from './types';
 
 export const DATA_VERSION = 1;
-export const REAL_DB = 'ezgi-terapi-ofisi';
-export const DEMO_DB = 'ezgi-terapi-ofisi-demo';
+export const REAL_DB = 'dkt-ofis';
+export const DEMO_DB = 'dkt-ofis-demo';
+/** Önceki sürümün veritabanı adı — açılışta yeni ada kopyalanır (silinmez). */
+export const LEGACY_DB = 'ezgi-terapi-ofisi';
+export const LEGACY_DEMO_DB = 'ezgi-terapi-ofisi-demo';
+export const SNAPSHOT_FORMATS = ['dkt-ofis', 'ezgi-terapi-ofisi'] as const;
 /** Yalnızca hayali verili demo veritabanı için; gerçek veriyle ilgisi yoktur. */
 export const DEMO_PASSWORD = 'demo-mod-sifresi';
 
@@ -99,7 +103,16 @@ export function getDataKey(): CryptoKey {
 
 export async function boot() {
   try {
-    const demo = localStorage.getItem('ezgi-demo') === '1';
+    migrateLocalKeys();
+    const demo = localStorage.getItem('dkt-demo') === '1';
+    if (!demo) {
+      try {
+        const r = await copyDatabaseIfNeeded(LEGACY_DB, REAL_DB);
+        if (r === 'copied') console.info('Önceki sürümün verileri yeni veritabanına kopyalandı.');
+      } catch (e) {
+        console.error('Eski veritabanı kopyalanamadı', e);
+      }
+    }
     setDatabaseName(demo ? DEMO_DB : REAL_DB);
     const vault = await getMeta<VaultMeta>('vault');
     setState({ demo });
@@ -118,6 +131,21 @@ export async function boot() {
   } catch (e) {
     console.error(e);
     setState({ status: 'error', error: 'Yerel veritabanı açılamadı. Tarayıcınız gizli (özel) modda olabilir ya da depolama izni kapalı olabilir.' });
+  }
+}
+
+/** Eski localStorage anahtarlarını yeni adlara taşır (yalnızca arayüz tercihleri). */
+function migrateLocalKeys() {
+  try {
+    for (const [o, n] of [['ezgi-theme', 'dkt-theme'], ['ezgi-name', 'dkt-name'], ['ezgi-lock-fails', 'dkt-lock-fails'], ['ezgi-demo', 'dkt-demo']]) {
+      const v = localStorage.getItem(o);
+      if (v !== null) {
+        if (localStorage.getItem(n) === null) localStorage.setItem(n, v);
+        localStorage.removeItem(o);
+      }
+    }
+  } catch {
+    /* depolama kapalı olabilir */
   }
 }
 
@@ -443,7 +471,7 @@ export async function updateSettings(patch: Partial<Settings>, summary = 'Ayarla
 // ───────────────────────── Anlık görüntü / geri yükleme ─────────────────────────
 
 export interface Snapshot {
-  format: 'ezgi-terapi-ofisi';
+  format: (typeof SNAPSHOT_FORMATS)[number];
   dataVersion: number;
   exportedAt: string;
   tables: Record<string, unknown[]>;
@@ -452,7 +480,7 @@ export interface Snapshot {
 export function makeSnapshot(db: DB = state.db): Snapshot {
   const tables: Record<string, unknown[]> = {};
   for (const t of TABLES) tables[t] = Array.from((db[t] as Map<string, unknown>).values());
-  return { format: 'ezgi-terapi-ofisi', dataVersion: DATA_VERSION, exportedAt: nowISO(), tables };
+  return { format: 'dkt-ofis', dataVersion: DATA_VERSION, exportedAt: nowISO(), tables };
 }
 
 export function countSnapshot(s: Snapshot): Record<string, number> {
@@ -523,13 +551,13 @@ export function mergeSnapshots(current: Snapshot, incoming: Snapshot): { merged:
 // ───────────────────────── Demo modu ─────────────────────────
 
 export function enterDemo() {
-  localStorage.setItem('ezgi-demo', '1');
+  localStorage.setItem('dkt-demo', '1');
   location.hash = '#/';
   location.reload();
 }
 
 export async function exitDemo() {
-  localStorage.removeItem('ezgi-demo');
+  localStorage.removeItem('dkt-demo');
   const { wipeDatabase } = await import('./idb');
   try {
     await wipeDatabase(DEMO_DB);

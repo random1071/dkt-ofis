@@ -97,7 +97,7 @@ export function Dashboard() {
     <div className="col gap-6">
       <div className="page-head" style={{ marginBottom: 0 }}>
         <div>
-          <h2 className="keep">{greet}, {s.therapistName.split(' ')[0]}</h2>
+          <h2 className="keep">{greet}{s.therapistName.trim() ? `, ${s.therapistName.trim().split(/\s+/)[0]}` : ''}</h2>
           <p>{fmtDate(t, { weekday: true })}</p>
         </div>
         <div className="row hide-mobile">

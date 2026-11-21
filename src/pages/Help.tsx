@@ -68,7 +68,7 @@ const TUTORIALS: { title: string; steps: string[]; tour?: TourStep[] }[] = [
   },
   {
     title: 'Uygulamayı telefona yüklemek',
-    steps: ['iPhone: Safari\'de adresi açın → Paylaş → "Ana Ekrana Ekle" → Ekle.', 'Android: Chrome\'da adresi açın → ⋮ menü → "Uygulamayı yükle" / "Ana ekrana ekle".', 'Ana ekrandaki "Terapi Ofisi" simgesinden açın; internet olmadan da çalışır.', 'Telefondaki kayıtlar bilgisayardakinden ayrıdır; aktarım için yedek dosyası kullanılır.'],
+    steps: ['iPhone: Safari\'de adresi açın → Paylaş → "Ana Ekrana Ekle" → Ekle.', 'Android: Chrome\'da adresi açın → ⋮ menü → "Uygulamayı yükle" / "Ana ekrana ekle".', 'Ana ekrandaki "DKT Ofis" simgesinden açın; internet olmadan da çalışır.', 'Telefondaki kayıtlar bilgisayardakinden ayrıdır; aktarım için yedek dosyası kullanılır.'],
   },
   {
     title: 'Dış kurum çalışma saatleri (isteğe bağlı)',
@@ -97,7 +97,7 @@ export function HelpPage() {
   const installable = useInstall();
   return (
     <div>
-      <div className="page-head"><div><h2>Yardım Merkezi</h2><p>Uygulamayı adım adım öğrenin</p></div></div>
+      <div className="page-head"><div><h2>DKT Ofis Yardım Merkezi</h2><p>Uygulamayı adım adım öğrenin</p></div></div>
       <Tabs value={tab} onChange={setTab} tabs={[
         { id: 'start', label: 'Başlangıç' },
         { id: 'computer', label: 'Bilgisayar' },
@@ -146,7 +146,7 @@ export function HelpPage() {
             <li><b>Chrome'da yükleme:</b> adres çubuğunun sağındaki <b>yükle</b> simgesine (ekran ve aşağı ok) tıklayın → "Yükle". Simge yoksa ⋮ menü → "Kaydet ve paylaş" → "Uygulamayı yükle".</li>
             <li><b>Edge'de yükleme:</b> ⋯ menü → "Uygulamalar" → "Bu siteyi uygulama olarak yükle" → "Yükle".</li>
             <li><b>Yükleme seçeneği yoksa (ör. Safari / Firefox):</b> sayfayı yer imlerine ekleyin; macOS Safari'de Dosya → "Dock'a Ekle" seçeneği de kullanılabilir.</li>
-            <li><b>Açmak:</b> yüklendikten sonra Başlat menüsü (Windows), Launchpad/Dock (macOS) veya masaüstündeki <b>Terapi Ofisi</b> simgesinden açın. Kendi penceresinde çalışır.</li>
+            <li><b>Açmak:</b> yüklendikten sonra Başlat menüsü (Windows), Launchpad/Dock (macOS) veya masaüstündeki <b>DKT Ofis</b> simgesinden açın. Kendi penceresinde çalışır.</li>
             <li><b>Kilidi açmak:</b> şifrenizi girip "Kilidi aç". Belirlediğiniz süre işlem yapılmazsa otomatik kilitlenir; sol alttaki "Kilitle" ile elle kilitleyebilirsiniz.</li>
             <li><b>Sol menü:</b> Genel Bakış, Bugün, Takvim; Ofis (Danışanlar, Seanslar, Bekleme Listesi); Finans (Ödemeler, Paketler, Gelir-Gider, Raporlar); Düzen; Sistem.</li>
             <li><b>Takvim:</b> Gün / Hafta / Ay / Ajanda görünümleri. Boş saate tıklayın → yeni randevu. Randevuyu sürükleyerek taşıyın.</li>
@@ -168,9 +168,9 @@ export function HelpPage() {
               <li>Uygulama adresini <b>Safari</b>'de açın (iPhone'da yükleme yalnızca Safari'den yapılabilir; iOS 16.4+ ile Chrome'daki Paylaş menüsünden de mümkündür).</li>
               <li>Ekranın altındaki <b>Paylaş</b> simgesine <Share style={{ display: 'inline', width: 16, height: 16, verticalAlign: -3 }} /> dokunun.</li>
               <li>Listeyi aşağı kaydırıp <b>"Ana Ekrana Ekle"</b> <PlusSquare style={{ display: 'inline', width: 16, height: 16, verticalAlign: -3 }} /> seçeneğine dokunun.</li>
-              <li>İsmin <b>"Terapi Ofisi"</b> olduğunu kontrol edin.</li>
+              <li>İsmin <b>"DKT Ofis"</b> olduğunu kontrol edin.</li>
               <li>Sağ üstteki <b>Ekle</b>'ye dokunun.</li>
-              <li>Ana ekranda beliren gül kurusu renkli simgeden açın. Artık normal bir uygulama gibi tam ekran çalışır.</li>
+              <li>Ana ekranda beliren DKT Ofis simgesinden açın. Artık normal bir uygulama gibi tam ekran çalışır.</li>
               <li><b>Mobil menü:</b> alttaki çubuk — Genel, Takvim, ortadaki <b>+</b> (hızlı ekle), Danışanlar ve Menü (diğer tüm bölümler).</li>
               <li><b>Randevu:</b> Takvim → güne dokun → boş saate dokun. Değiştirmek için randevuya dokunun → Düzenle veya Taşı / Ertele.</li>
               <li><b>Ödeme:</b> + → Ödeme veya Bugün ekranında "Ödeme al".</li>
@@ -189,7 +189,7 @@ export function HelpPage() {
             <li>Uygulama adresini <b>Chrome</b>'da açın.</li>
             <li>Ekranın altında "Uygulamayı yükle" bildirimi çıkarsa dokunun. Çıkmazsa sağ üstteki <MoreVertical style={{ display: 'inline', width: 16, height: 16, verticalAlign: -3 }} /> menü → <b>"Uygulamayı yükle"</b> veya <b>"Ana ekrana ekle"</b>.</li>
             <li>"Yükle"ye dokunarak onaylayın.</li>
-            <li>Ana ekrandaki / uygulama çekmecesindeki <b>Terapi Ofisi</b> simgesinden açın; kendi penceresinde, adres çubuğu olmadan açılır.</li>
+            <li>Ana ekrandaki / uygulama çekmecesindeki <b>DKT Ofis</b> simgesinden açın; kendi penceresinde, adres çubuğu olmadan açılır.</li>
             <li><b>Mobil menü:</b> alttaki çubuk — Genel, Takvim, <b>+</b>, Danışanlar, Menü.</li>
             <li><b>Kayıt yönetimi:</b> her kayda dokunarak açın; düzenleme, arşivleme ve geri alma o ekrandadır.</li>
             <li><b>Yedek:</b> Menü → Yedekleme → "Yedek dosyasını indir" (İndirilenler klasörüne kaydedilir) veya "Paylaş" ile Google Drive'a kaydedin. Geri yüklemek için "Yedek dosyası seç".</li>
@@ -247,7 +247,7 @@ function IphoneIllustration() {
     <svg viewBox="0 0 140 260" width="140" style={{ flex: 'none' }} aria-label="iPhone Paylaş menüsü çizimi">
       <rect x="4" y="4" width="132" height="252" rx="22" fill="var(--surface-2)" stroke="var(--border-strong)" strokeWidth="2" />
       <rect x="14" y="20" width="112" height="16" rx="8" fill="var(--surface)" />
-      <text x="70" y="31" textAnchor="middle" fontSize="7" fill="var(--text-3)">terapi-ofisi</text>
+      <text x="70" y="31" textAnchor="middle" fontSize="7" fill="var(--text-3)">dkt-ofis</text>
       <rect x="14" y="120" width="112" height="100" rx="10" fill="var(--surface)" stroke="var(--border)" />
       <text x="24" y="140" fontSize="8" fill="var(--text-2)">Kopyala</text>
       <line x1="20" y1="148" x2="120" y2="148" stroke="var(--border)" />

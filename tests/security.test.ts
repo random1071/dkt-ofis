@@ -24,7 +24,7 @@ describe('Güvenlik: depolama ve şifreleme', () => {
   beforeAll(async () => {
     __setNow('2026-11-21T10:00');
     await S.boot();
-    await S.setup(PW, { therapistName: 'Ezgi' });
+    await S.setup(PW, { therapistName: 'Test Terapist' });
     const c = await A.saveClient({ name: CANARY, phone: CANARY_PHONE, registeredAt: '2026-11-01', sessionDuration: 45, sessionFee: 1750, billingMode: 'individual', notes: CANARY_NOTE, serviceCategory: 'Kekemelik / akıcılık', guardianName: 'Veli Kanaryaoğlu' });
     const r = await A.createAppointment({ clientId: c.id, date: '2026-11-20', time: '10:00', duration: 45, fee: 1750, billing: 'individual', notes: CANARY_NOTE });
     await A.changeStatus(r.ids[0], 'completed', { sessionNote: CANARY_NOTE, payment: { amount: 1750, method: 'Nakit', date: '2026-11-20' } });

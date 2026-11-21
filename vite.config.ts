@@ -12,9 +12,9 @@ export default defineConfig({
       includeAssets: ['favicon.svg', 'apple-touch-icon.png', 'icons/*.png'],
       manifest: {
         id: './',
-        name: 'Ezgi — Terapi Ofisi',
-        short_name: 'Terapi Ofisi',
-        description: 'Dil ve konuşma terapisti için kişisel ofis yönetimi: takvim, danışanlar, ödemeler, paketler ve raporlar.',
+        name: 'DKT Ofis',
+        short_name: 'DKT Ofis',
+        description: 'DKT Ofis — dil ve konuşma terapisti için ofis yönetimi: takvim, danışanlar, ödemeler, paketler ve raporlar.',
         lang: 'tr',
         dir: 'ltr',
         start_url: './',

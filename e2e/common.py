@@ -5,7 +5,7 @@ BASE = "http://localhost:4173/"
 CHROME = "/usr/bin/google-chrome"
 SHOTS = "/home/claude/e2e/shots"
 os.makedirs(SHOTS, exist_ok=True)
-PW = "Ezgi-Test-2026!"
+PW = "Dkt-Test-2026!"
 
 def launch(p, profile, mobile=False, fresh=False):
     if fresh and os.path.exists(profile):

@@ -5,7 +5,7 @@ import { addDays, today, nowLocal, dateOf } from './dates';
 import { getDBSnapshot, updateSettings } from './store';
 
 export async function seedDemo() {
-  await updateSettings({ defaultFee: 1500, therapistName: 'Ezgi', welcomeCardHidden: false, onboardingDone: true });
+  await updateSettings({ defaultFee: 1500, therapistName: 'Örnek Terapist', officeName: 'Örnek Dil ve Konuşma Ofisi', welcomeCardHidden: false, onboardingDone: true });
   const t = today();
   const mk = (name: string, phone: string, extra: Partial<A.ClientInput> = {}) =>
     A.saveClient({ name, phone, registeredAt: addDays(t, -60), sessionDuration: 45, sessionFee: 1500, billingMode: 'individual', serviceCategory: 'Dil gelişimi', sessionType: 'Bireysel terapi', ...extra });

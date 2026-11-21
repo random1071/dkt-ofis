@@ -32,7 +32,7 @@ function strength(pw: string) {
 
 export function SetupScreen({ onBegin, onCode }: { onBegin: () => void; onCode: (code: string) => void }) {
   const [step, setStep] = useState(0);
-  const [therapistName, setTherapistName] = useState('Ezgi');
+  const [therapistName, setTherapistName] = useState('');
   const [officeName, setOfficeName] = useState('Dil ve Konuşma Terapisi Ofisi');
   const [pw, setPw] = useState('');
   const [pw2, setPw2] = useState('');
@@ -46,7 +46,7 @@ export function SetupScreen({ onBegin, onCode }: { onBegin: () => void; onCode: 
     setBusy(true);
     onBegin();
     try {
-      const c = await setup(pw, { therapistName, officeName });
+      const c = await setup(pw, { therapistName: therapistName.trim(), officeName });
       onCode(c);
     } catch (e) {
       console.error(e);
@@ -62,7 +62,7 @@ export function SetupScreen({ onBegin, onCode }: { onBegin: () => void; onCode: 
         <div className="row mb-4" style={{ gap: 14 }}>
           <BrandMark style={{ width: 48, height: 48 }} />
           <div>
-            <div className="serif" style={{ fontSize: '1.5rem', lineHeight: 1.1 }}>Terapi Ofisi</div>
+            <div className="serif" style={{ fontSize: '1.6rem', lineHeight: 1.1 }}>DKT Ofis</div>
             <div className="small faint">Kişisel ofis yönetimi</div>
           </div>
         </div>
@@ -70,9 +70,9 @@ export function SetupScreen({ onBegin, onCode }: { onBegin: () => void; onCode: 
 
         {step === 0 && (
           <div className="col gap-4 fade-in">
-            <h1>Hoş geldin, Ezgi</h1>
+            <h1>Hoş geldiniz</h1>
             <p className="muted" style={{ lineHeight: 1.6 }}>
-              Randevuların, danışanların, ödemelerin ve ofis giderlerin tek bir yerde. Tüm kayıtların yalnızca bu cihazda, şifreli olarak saklanır; internet olmadan da çalışır.
+              DKT Ofis ile randevuların, danışanların, ödemelerin ve ofis giderlerin tek bir yerde. Tüm kayıtların yalnızca bu cihazda, şifreli olarak saklanır; internet olmadan da çalışır.
             </p>
             <div className="callout accent"><ShieldCheck /><div className="callout-body small">Kurulum 1 dakika sürer: ad bilgisi, giriş şifresi ve şifreni unutursan kullanacağın kurtarma kodu.</div></div>
             <button className="btn primary lg block" onClick={() => setStep(1)} data-testid="setup-start">Başlayalım <ArrowRight /></button>
@@ -83,7 +83,7 @@ export function SetupScreen({ onBegin, onCode }: { onBegin: () => void; onCode: 
         {step === 1 && (
           <div className="col gap-4 fade-in">
             <h1>Ofis bilgileri</h1>
-            <Field label="Adın" help="İsterseniz ad soyad yazın; yalnızca bu cihazda şifreli saklanır."><input className="input" value={therapistName} onChange={(e) => setTherapistName(e.target.value)} /></Field>
+            <Field label="Adınız (isteğe bağlı)" help="Karşılama ekranında ve mesaj şablonlarında kullanılır; yalnızca bu cihazda şifreli saklanır. Sonradan Ayarlar'dan değiştirebilirsiniz."><input className="input" value={therapistName} placeholder="Örn. Ad Soyad" onChange={(e) => setTherapistName(e.target.value)} /></Field>
             <Field label="Ofis adı" help="Mesaj şablonlarında ve raporlarda görünür. Daha sonra Ayarlar'dan değiştirebilirsin.">
               <input className="input" value={officeName} onChange={(e) => setOfficeName(e.target.value)} />
             </Field>
@@ -128,7 +128,7 @@ export function RecoveryCodeScreen({ code, onDone }: { code: string; onDone: () 
           <div className="recovery-code" data-testid="recovery-code">{code}</div>
           <div className="row">
             <button className="btn grow" onClick={async () => toast((await copyText(code)) ? 'Kod kopyalandı' : 'Kopyalanamadı', (await copyText(code)) ? 'success' : 'error')}><Copy /> Kopyala</button>
-            <button className="btn grow" onClick={() => downloadText(`Terapi Ofisi — Kurtarma Kodu\n\n${code}\n\nBu kodu güvenli bir yerde saklayın. Şifrenizi unutursanız kayıtlarınıza yalnızca bu kodla ulaşabilirsiniz.\n`, 'TerapiOfisi-Kurtarma-Kodu.txt', 'text/plain;charset=utf-8')}><Download /> İndir</button>
+            <button className="btn grow" onClick={() => downloadText(`DKT Ofis — Kurtarma Kodu\n\n${code}\n\nBu kodu güvenli bir yerde saklayın. Şifrenizi unutursanız kayıtlarınıza yalnızca bu kodla ulaşabilirsiniz.\n`, 'DKTOfis-Kurtarma-Kodu.txt', 'text/plain;charset=utf-8')}><Download /> İndir</button>
           </div>
           <label className="check"><input type="checkbox" checked={saved} onChange={(e) => setSaved(e.target.checked)} data-testid="recovery-saved" /> Kurtarma kodunu güvenli bir yere kaydettim.</label>
           <button className="btn primary lg block" disabled={!saved} onClick={onDone} data-testid="recovery-done">Uygulamaya geç <ArrowRight /></button>
@@ -139,7 +139,7 @@ export function RecoveryCodeScreen({ code, onDone }: { code: string; onDone: () 
 }
 
 // Hatalı şifre denemelerini yavaşlatır: 5 hatadan sonra 30 sn, her 5 hatada süre ikiye katlanır (en çok 15 dk).
-const FAIL_KEY = 'ezgi-lock-fails';
+const FAIL_KEY = 'dkt-lock-fails';
 function readFails(): { count: number; until: number } {
   try {
     return JSON.parse(localStorage.getItem(FAIL_KEY) || '') as { count: number; until: number };

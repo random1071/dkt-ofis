@@ -79,7 +79,7 @@ with sync_playwright() as p:
     bad_cache = [u for u in cache_urls if urlparse(u).netloc != "localhost:4173" or re.sub(r"\?__WB_REVISION__=[0-9a-f]+$", "", u).count("?") or re.search(r"danisan|api|odeme", u)]
     ok("service worker önbelleği yalnızca uygulama dosyaları", not bad_cache, f"{len(cache_urls)} dosya; şüpheli: {bad_cache}")
     # vault meta düz metin incelemesi
-    vault = dump["idb"]["ezgi-terapi-ofisi"]["meta"]
+    vault = dump["idb"]["dkt-ofis"]["meta"]
     ok("kasa meta verisinde yalnızca tuz/sarılı anahtar (şifre yok)", PWS not in vault and "salt" in vault, "")
     # Kilit ekranı kaba kuvvet yavaşlatma
     page.locator('aside button[title="Uygulamayı kilitle"]').click(); page.wait_for_timeout(300)

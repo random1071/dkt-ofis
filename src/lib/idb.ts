@@ -29,7 +29,7 @@ export interface StoredBackup {
   ct: ArrayBuffer;
 }
 
-let dbName = 'ezgi-terapi-ofisi';
+let dbName = 'dkt-ofis';
 let dbPromise: Promise<IDBPDatabase> | null = null;
 
 export function setDatabaseName(name: string) {
@@ -148,6 +148,69 @@ export async function wipeDatabase(name: string): Promise<void> {
     req.onerror = () => reject(req.error);
     req.onblocked = () => resolve();
   });
+}
+
+/** Veritabanı var mı? (yoksa oluşturmadan kontrol eder) */
+export function databaseExists(name: string): Promise<boolean> {
+  return new Promise((resolve) => {
+    let created = false;
+    const req = indexedDB.open(name);
+    req.onupgradeneeded = () => {
+      created = true;
+      req.transaction?.abort(); // yoksa oluşturma
+    };
+    req.onsuccess = () => {
+      const ok = req.result.objectStoreNames.contains('meta');
+      req.result.close();
+      resolve(ok);
+    };
+    req.onerror = () => resolve(false);
+    void created;
+  });
+}
+
+/**
+ * Eski adlı veritabanındaki şifreli kayıtları olduğu gibi (çözmeden) yeni ada kopyalar.
+ * Eski veritabanı SİLİNMEZ. Hedefte zaten kasa varsa hiçbir şey yapmaz.
+ */
+export async function copyDatabaseIfNeeded(from: string, to: string): Promise<'copied' | 'skipped'> {
+  if (!(await databaseExists(from))) return 'skipped';
+  const target = await openDB(to, IDB_VERSION, {
+    upgrade(db, oldVersion) {
+      if (oldVersion < 1) {
+        db.createObjectStore('meta');
+        const rec = db.createObjectStore('records', { keyPath: 'k' });
+        rec.createIndex('t', 't');
+        db.createObjectStore('backups', { keyPath: 'id' });
+        db.createObjectStore('handles');
+      }
+    },
+  });
+  try {
+    if (await target.get('meta', 'vault')) return 'skipped';
+    const source = await openDB(from);
+    try {
+      const metaKeys = await source.getAllKeys('meta');
+      const metaVals = await source.getAll('meta');
+      const records = await source.getAll('records');
+      const backups = await source.getAll('backups');
+      const handleKeys = source.objectStoreNames.contains('handles') ? await source.getAllKeys('handles') : [];
+      const handleVals = source.objectStoreNames.contains('handles') ? await source.getAll('handles') : [];
+      const tx = target.transaction(['meta', 'records', 'backups', 'handles'], 'readwrite');
+      metaKeys.forEach((k, i) => tx.objectStore('meta').put(metaVals[i], k));
+      records.forEach((r) => tx.objectStore('records').put(r));
+      backups.forEach((b) => tx.objectStore('backups').put(b));
+      handleKeys.forEach((k, i) => tx.objectStore('handles').put(handleVals[i], k));
+      await tx.done;
+      const copied = await target.count('records');
+      if (copied !== records.length) throw new Error('Kopyalama doğrulanamadı');
+      return 'copied';
+    } finally {
+      source.close();
+    }
+  } finally {
+    target.close();
+  }
 }
 
 export function isQuotaError(e: unknown): boolean {

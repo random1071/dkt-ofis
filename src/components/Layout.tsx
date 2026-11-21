@@ -46,7 +46,7 @@ export const NAV: NavItem[] = [
 
 export function titleFor(path: string): string {
   if (path.startsWith('/danisanlar/')) return 'Danışan';
-  return NAV.find((n) => n.path === path)?.label ?? 'Terapi Ofisi';
+  return NAV.find((n) => n.path === path)?.label ?? 'DKT Ofis';
 }
 
 function isActive(itemPath: string, path: string) {
@@ -138,8 +138,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <div className="brand">
           <BrandMark className="brand-mark" />
           <div className="brand-text">
-            <div className="brand-name">Terapi Ofisi</div>
-            <div className="brand-sub ellipsis" style={{ maxWidth: 160 }}>{s.therapistName}</div>
+            <div className="brand-name">DKT Ofis</div>
+            <div className="brand-sub ellipsis" style={{ maxWidth: 160 }}>{s.therapistName || s.officeName}</div>
           </div>
         </div>
         <nav className="nav">

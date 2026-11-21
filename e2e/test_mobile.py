@@ -65,7 +65,7 @@ with sync_playwright() as p:
     page.wait_for_timeout(1500)
     ok("demodan çıkınca gerçek (boş) kurulum ekranı", page.get_by_test_id("setup-start").count() == 1)
     dbs = page.evaluate("indexedDB.databases().then(l => l.map(d => d.name))")
-    ok("demo veritabanı silindi, gerçek veri karışmadı", "ezgi-terapi-ofisi-demo" not in dbs, str(dbs))
+    ok("demo veritabanı silindi, gerçek veri karışmadı", "dkt-ofis-demo" not in dbs, str(dbs))
     ctx.close()
     print("KONSOL HATALARI:", errors[:10])
     print(f"{sum(r[1] for r in results)}/{len(results)} geçti")

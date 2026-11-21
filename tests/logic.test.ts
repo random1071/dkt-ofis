@@ -6,7 +6,7 @@ import * as B from '../src/lib/backup';
 import { checkConflicts, seriesDates, freeSlots } from '../src/lib/schedule';
 import { __setNow, addDays } from '../src/lib/dates';
 
-const PW = 'Ezgi-test-2026';
+const PW = 'Test-sifre-2026';
 let recovery = '';
 const db = () => S.getDBSnapshot();
 
@@ -15,7 +15,7 @@ describe('Uçtan uca iş akışı (veri katmanı)', () => {
     __setNow('2026-11-21T10:00');
     await S.boot();
     expect(S.getState().status).toBe('setup');
-    recovery = await S.setup(PW, { therapistName: 'Ezgi' });
+    recovery = await S.setup(PW, { therapistName: 'Test Terapist' });
     expect(S.getState().status).toBe('unlocked');
     await S.updateSettings({ defaultFee: 1500 });
   });

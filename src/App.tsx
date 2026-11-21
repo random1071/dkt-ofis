@@ -31,8 +31,8 @@ function ThemeSync() {
   useEffect(() => {
     applyTheme(s.theme);
     try {
-      localStorage.setItem('ezgi-theme', s.theme);
-      localStorage.setItem('ezgi-name', s.therapistName.split(' ')[0] ?? '');
+      localStorage.setItem('dkt-theme', s.theme);
+      localStorage.setItem('dkt-name', s.therapistName.trim().split(/\s+/)[0] ?? '');
     } catch { /* yok say */ }
     if (s.theme !== 'system') return;
     const mq = window.matchMedia('(prefers-color-scheme: dark)');
@@ -87,7 +87,7 @@ export default function App() {
   const [recovery, setRecovery] = useState<{ pending: boolean; code?: string }>({ pending: false });
   useEffect(() => {
     if (st.status !== 'unlocked') {
-      try { applyTheme(localStorage.getItem('ezgi-theme') || 'system'); } catch { applyTheme('system'); }
+      try { applyTheme(localStorage.getItem('dkt-theme') || 'system'); } catch { applyTheme('system'); }
     }
   }, [st.status]);
 
@@ -104,7 +104,7 @@ export default function App() {
     body = <SetupScreen onBegin={() => setRecovery({ pending: true })} onCode={(code) => setRecovery({ pending: true, code })} />;
   } else if (st.status === 'locked') {
     let name = '';
-    try { name = localStorage.getItem('ezgi-name') ?? ''; } catch { /* yok */ }
+    try { name = localStorage.getItem('dkt-name') ?? ''; } catch { /* yok */ }
     body = <LockScreen name={name} />;
   } else {
     body = (

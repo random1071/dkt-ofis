@@ -10,7 +10,7 @@ import {
 } from './idb';
 import { nowISO } from './dates';
 import {
-  countSnapshot, getDataKey, getSettings, getState, makeSnapshot, mergeSnapshots, onDataChange, onUnlocked, replaceAllData,
+  SNAPSHOT_FORMATS, countSnapshot, getDataKey, getSettings, getState, makeSnapshot, mergeSnapshots, onDataChange, onUnlocked, replaceAllData,
   type Snapshot,
 } from './store';
 import { TABLES } from './types';
@@ -19,7 +19,9 @@ import { uuid } from './crypto';
 import { downloadBlob } from './format';
 
 export const APP_VERSION = '1.0.0';
-export const FILE_FORMAT = 'ezgi-terapi-ofisi-yedek';
+export const FILE_FORMAT = 'dkt-ofis-yedek';
+/** Önceki sürümlerin yedek biçimi — geri yükleme için hâlâ kabul edilir */
+export const LEGACY_FILE_FORMATS = ['ezgi-terapi-ofisi-yedek'];
 
 export interface BackupState {
   lastAutoAt?: string;
@@ -158,7 +160,7 @@ export async function maybeAutoBackup(overrideHours?: number, force = false) {
 // ───────────────────────── Yedek dosyası ─────────────────────────
 
 export interface BackupFile {
-  format: typeof FILE_FORMAT;
+  format: string;
   version: 1;
   createdAt: string;
   appVersion: string;
@@ -188,7 +190,7 @@ export async function buildBackupFile(customPassword?: string): Promise<{ blob: 
   }
   const json = JSON.stringify(file);
   const stamp = file.createdAt.slice(0, 16).replace('T', '_').replace(':', '-');
-  return { blob: new Blob([json], { type: 'application/json' }), name: `TerapiOfisi-Yedek-${stamp}.json`, file };
+  return { blob: new Blob([json], { type: 'application/json' }), name: `DKTOfis-Yedek-${stamp}.json`, file };
 }
 
 export async function exportBackupFile(customPassword?: string): Promise<string> {
@@ -217,7 +219,7 @@ export async function shareBackupFile(): Promise<boolean> {
   const nav = navigator as Navigator & { canShare?: (d: unknown) => boolean };
   if (nav.canShare?.({ files: [f] })) {
     try {
-      await navigator.share({ files: [f], title: 'Terapi Ofisi yedeği' });
+      await navigator.share({ files: [f], title: 'DKT Ofis yedeği' });
       await patchBackupState({ lastExportAt: nowISO() });
       return true;
     } catch (e) {
@@ -244,7 +246,7 @@ export function parseBackupFile(text: string): BackupFile {
   } catch {
     throw new Error('Bu dosya geçerli bir yedek dosyası değil.');
   }
-  if (obj?.format !== FILE_FORMAT) throw new Error('Bu dosya Terapi Ofisi yedeği değil.');
+  if (obj?.format !== FILE_FORMAT && !LEGACY_FILE_FORMATS.includes(obj?.format)) throw new Error('Bu dosya bir DKT Ofis yedeği değil.');
   if (obj.version !== 1) throw new Error('Bu yedek daha yeni bir uygulama sürümüyle oluşturulmuş. Lütfen uygulamayı güncelleyin.');
   if (!obj.keys?.password || !obj.iv || !obj.ct) throw new Error('Yedek dosyası eksik veya bozuk.');
   return obj;
@@ -275,7 +277,7 @@ export async function decryptBackupFile(file: BackupFile, secret: string): Promi
 }
 
 export function validateSnapshot(snap: Snapshot) {
-  if (snap?.format !== 'ezgi-terapi-ofisi' || typeof snap.tables !== 'object') throw new Error('Yedek içeriği tanınamadı.');
+  if (!(SNAPSHOT_FORMATS as readonly string[]).includes(snap?.format) || typeof snap.tables !== 'object') throw new Error('Yedek içeriği tanınamadı.');
   for (const t of TABLES) {
     const arr = snap.tables[t];
     if (arr !== undefined && !Array.isArray(arr)) throw new Error(`Yedekte "${t}" bölümü bozuk.`);
@@ -316,7 +318,7 @@ export function folderBackupSupported(): boolean {
 export async function chooseBackupFolder(): Promise<string | null> {
   const picker = (window as unknown as { showDirectoryPicker: (o: unknown) => Promise<DirHandle> }).showDirectoryPicker;
   try {
-    const h = await picker({ id: 'terapi-ofisi-yedek', mode: 'readwrite', startIn: 'documents' });
+    const h = await picker({ id: 'dkt-ofis-yedek', mode: 'readwrite', startIn: 'documents' });
     await setHandle('backupDir', h);
     await patchBackupState({ folderName: h.name, lastFolderError: undefined });
     await writeToFolderIfConfigured(true);
@@ -350,7 +352,7 @@ export async function writeToFolderIfConfigured(interactive = false): Promise<bo
     }
     const { blob, file } = await buildBackupFile();
     const day = file.createdAt.slice(0, 10);
-    const fh = await h.getFileHandle(`TerapiOfisi-Yedek-${day}.json`, { create: true });
+    const fh = await h.getFileHandle(`DKTOfis-Yedek-${day}.json`, { create: true });
     const w = await fh.createWritable();
     await w.write(blob);
     await w.close();

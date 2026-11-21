@@ -154,7 +154,7 @@ export function MessageDialog({ clientId, appointmentId, templateKey, phone: pho
       saat: a ? timeOf(a.start) : '',
       bakiye: l ? fmtMoney(Math.max(0, l.balance)) : '',
       kalan: pk ? String(packageRemaining(db, pk.id)) : '',
-      terapist: s.therapistName,
+      terapist: s.therapistName || s.officeName,
       ofis: s.officeName,
     };
   }, [c, a, db, s, to, nameOverride]);
