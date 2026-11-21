@@ -71,6 +71,34 @@ const TUTORIALS: { title: string; steps: string[]; tour?: TourStep[] }[] = [
     steps: ['iPhone: Safari\'de adresi açın → Paylaş → "Ana Ekrana Ekle" → "Web Uygulaması olarak aç" açık → Ekle.', 'Android: Chrome\'da adresi açın → ⋮ menü → "Uygulamayı yükle" / "Ana ekrana ekle".', 'Ana ekrandaki "DKT Ofis" simgesinden açın; internet olmadan da çalışır.', 'Telefondaki kayıtlar bilgisayardakinden ayrıdır; aktarım için yedek dosyası kullanılır.'],
   },
   {
+    title: 'Seans notu yazmak',
+    steps: ['Bugün ekranında randevudaki "Seans notu" düğmesine, randevu ayrıntısındaki "Seans notu yaz"a veya danışan dosyasında Seans Notları → "Yeni seans notu"na dokunun.', 'Şablon seçin: Serbest not, SOAP (Subjektif, Objektif, Değerlendirme, Plan) veya Kısa seans notu. Kendi şablonlarınızı Not ve Form Şablonları ekranında hazırlarsınız.', 'Yazdıkça not birkaç saniyede bir şifreli olarak "taslak" kaydedilir; pencereyi kapatıp sonra devam edebilirsiniz.', 'Bitince "Notu tamamla". Sonradan düzenlerseniz önceki hâl "Sürümler"de saklanır ve geri dönebilirsiniz.', 'Silinen notlar danışan dosyasında Seans Notları → "Silinenler"de durur; oradan geri alabilirsiniz.'],
+  },
+  {
+    title: 'Konuşarak not yazmak',
+    steps: ['Seans notu penceresinde "Konuşarak yaz"a dokunun. Konuştuklarınız imlecin olduğu yere eklenir; mevcut metin silinmez.', '"virgül", "nokta", "soru işareti", "yeni satır" diyerek noktalama ekleyebilirsiniz.', 'Cihaz konuşmayı kendisi işleyemiyorsa ses metne çevrilmek üzere Apple / Google / Microsoft\'a gidebilir; ilk kullanımda bu açıkça sorulur. Danışan adı ve tanı söylemeyin.', 'Uygulama ses kaydı saklamaz. Metni okuyup düzeltin, sonra kaydedin.', 'Mikrofon düğmesi yoksa telefon klavyesindeki mikrofon (dikte) tuşunu kullanabilirsiniz.'],
+  },
+  {
+    title: 'Hedef (BEP) ve gelişim takibi',
+    steps: ['Danışan dosyası → Hedefler (BEP) → "Uzun vadeli amaç".', 'Amacın altına "Bu amaca hedef ekle" ile kısa vadeli hedef ve ölçüt (örn. 10 denemede 8) yazın.', 'Ölçüm: hedefteki "Ölçüm" düğmesi veya seans notundaki "Bu seansta çalışılan hedefler" bölümü. Doğru ve toplam deneme girince yüzde hesaplanır.', '"Gelişim" düğmesi grafiği ve tüm ölçümleri gösterir.', 'Durumu "Devam ediyor", "Beklemede" veya "Tamamlandı" yapın. İçerik tamamen sizin mesleki değerlendirmenizdir; uygulama terapi önerisi sunmaz.'],
+  },
+  {
+    title: 'Ev çalışması vermek',
+    steps: ['Danışan dosyası → Ev Çalışmaları → "Ev çalışması".', 'Başlık, açıklama, son tarih ve isterseniz ilgili hedefi seçin.', 'Sonraki seansta "Tamamlandı" veya "Tamamlanmadı" olarak işaretleyin.', 'Geçmişi görmek için "Tümü (geçmiş dahil)".'],
+  },
+  {
+    title: 'PDF rapor almak',
+    steps: ['Tek seans: seans notu penceresinde "PDF".', 'Tüm seans notları: danışan dosyası → Seans Notları → "PDF". Hedef raporu: Hedefler (BEP) → "PDF". Tam dosya: danışan menüsü (⋯) → "Danışan dosyası (PDF)".', 'Gelir-gider: Raporlar → "Gelir-gider PDF".', 'Açılan sayfada isterseniz tarih aralığı seçin, "PDF olarak kaydet / yazdır"a basın ve yazdırma penceresinde "PDF olarak kaydet"i seçin.', 'PDF şifresizdir; güvenli saklayın.'],
+  },
+  {
+    title: 'Belge ve fotoğraf eklemek',
+    steps: ['Danışan dosyası → Belgeler → "Dosya ekle".', 'Fotoğraf, PDF veya belge seçin (dosya başına en fazla 10 MB).', 'Dosyalar bu cihazda şifreli saklanır ve yedek dosyasına dahil edilir (cihaz içi otomatik yedeklere dahil edilmez).', 'Görüntülemek veya indirmek için dosyanın yanındaki düğmeye dokunun.'],
+  },
+  {
+    title: 'Bildirimler ve takvime ekleme',
+    steps: ['Ayarlar → Bildirimler → "Yaklaşan randevular için bildirim göster".', 'Ne zaman hatırlatılacağını seçin (örn. 1 gün önce, 2 saat önce) ve "Cihaz bildirimlerine izin ver"e dokunun.', 'Bildirimler uygulama açıkken gelir. Uygulama kapalıyken hatırlatma için "Önümüzdeki 60 günü telefon takvimine aktar" veya randevudaki "Telefon takvimine ekle"yi kullanın.', 'Takvim kayıtlarında ve bildirimlerde varsayılan olarak danışan adı yazmaz.', 'Bu bildirimler yalnızca size gelir; danışana mesaj gönderilmez.'],
+  },
+  {
     title: 'Dış kurum çalışma saatleri (isteğe bağlı)',
     steps: ['Takvim → ⋯ → "Dış kurum çalışma saati ekle" (veya Ayarlar → Dış kurum).', 'Kurum adını, günleri (birden fazla) ve saat aralığını girin; başlangıç/bitiş tarihini belirleyin.', 'Bu saatler takvimde çizgili mavi bant olarak görünür ve ofise randevu verilmesi engellenir.', 'Bir gün gitmeyecekseniz randevu verirken "Bu tarihte gitmiyorum" diyebilirsiniz.', 'Düzeni geçici kapatabilir, düzenleyebilir veya silebilirsiniz. Finans ve danışan kayıtlarına dahil edilmez.'],
   },
@@ -89,6 +117,8 @@ const FAQ: [string, React.ReactNode][] = [
   ['Şifremi unutursam ne olur?', <>Kilit ekranında "Şifremi unuttum" → kurulumda verilen kurtarma kodu → yeni şifre. Kurtarma kodu da yoksa şifreli kayıtlara ulaşılamaz; bu yüzden kodu güvenli yerde saklayın.</>],
   ['Şifre zorunlu mu?', <>Hayır. Kurulumda "Şifresiz devam et" seçebilir, şifre korumasını sonradan Ayarlar → Güvenlik'ten açıp kapatabilirsiniz; kayıtlarınız silinmez. Şifresiz kullanımda kayıtlar cihazda yine şifreli saklanır, ancak uygulama şifre sormadan açılır: cihazın kilidi açıkken eline alan herkes kayıtları görebilir. Danışan bilgileri için şifre korumasını öneririz.</>],
   ['İnternet olmadan çalışır mı?', <>Evet. Uygulama bir kez açılıp yüklendikten sonra internet olmadan açılır ve tüm kayıtlarınızla çalışır. WhatsApp mesajı göndermek için internet gerekir.</>],
+  ['Seans notlarım güvende mi?', <>Seans notları, hedefler, ev çalışmaları, formlar ve belgeler diğer kayıtlar gibi bu cihazda AES-256 ile şifreli saklanır ve yedek dosyasına dahil edilir. Hiçbir yapay zekâ servisine veya sunucuya gönderilmez. PDF ve CSV dışa aktarımları şifresizdir.</>],
+  ['Uygulama kapalıyken bildirim gelir mi?', <>Hayır. Bildirimler uygulama açıkken gösterilir. Uygulama kapalıyken hatırlatma için randevuları telefonun takvimine aktarın (Ayarlar → Bildirimler); takvim uygulaması alarm verir. Kapalıyken bildirim için ayrı bir sunucu gerekir; şu an kurulmadı.</>],
   ['Mesajlar otomatik gönderiliyor mu?', <>Hayır. Uygulama hiçbir mesajı kendiliğinden göndermez. "WhatsApp'ta aç" mesajı hazırlar; göndermek için WhatsApp'ta gönder tuşuna sizin basmanız gerekir.</>],
   ['Ücretli bir şey var mı?', <>Hayır. Uygulama abonelik, deneme süresi veya ücretli servis kullanmaz. Uygulama ücretsiz Cloudflare Workers üzerinde yalnızca statik dosya olarak yayınlanır; kayıtlarınız oraya gönderilmez.</>],
 ];

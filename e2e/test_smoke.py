@@ -35,7 +35,11 @@ with sync_playwright() as p:
     ok("hızlı ekle formları açılıyor", True)
     # randevu detayı + iptal/gelmedi/ertele diyalogları
     page.goto(BASE + "#/takvim"); page.get_by_role("button", name="Ajanda", exact=True).click(); page.wait_for_timeout(300)
-    page.locator(".appt-row").first.click(); page.wait_for_timeout(300)
+    # Planlı (iptal edilebilir) ilk randevuyu bul: test günün saatinden bağımsız çalışsın
+    for i in range(min(15, page.locator(".appt-row").count())):
+        page.locator(".appt-row").nth(i).click(); page.wait_for_timeout(300)
+        if page.locator(".modal").last.get_by_role("button", name="İptal et").count(): break
+        page.keyboard.press("Escape"); page.wait_for_timeout(200)
     shot(page, "s-appt-detail")
     for b in ["Gelmedi", "İptal et", "Taşı / Ertele"]:
         if page.locator(".modal").last.get_by_role("button", name=b).count():
