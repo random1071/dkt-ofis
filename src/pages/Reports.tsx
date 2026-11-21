@@ -6,7 +6,7 @@ import { periodFinance, periodSessions, totalReceivables, packageRemaining, pack
 import { csvNumber, downloadText, fmtMoney, fmtPercent, toCSV } from '../lib/format';
 import { BarList, ComboChart, Donut } from '../components/charts';
 import { makePeriod, PeriodPicker, periodLabel, previousPeriod, type Period } from '../components/PeriodPicker';
-import { Segmented } from '../components/ui';
+import { confirmDialog, Segmented } from '../components/ui';
 
 function Delta({ cur, prev, money = true, invert = false, pct = false }: { cur: number; prev: number; money?: boolean; invert?: boolean; pct?: boolean }) {
   if (!prev && !cur) return <span className="xs faint">—</span>;
@@ -85,7 +85,9 @@ export function ReportsPage() {
     return [...m.entries()].sort((a, b) => b[1] - a[1]).slice(0, 6).map(([id, v]) => ({ label: db.clients.get(id)?.name ?? '—', value: v }));
   }, [db, period]);
 
-  function exportCSV() {
+  async function exportCSV() {
+    const ok = await confirmDialog({ title: 'Şifresiz dosya', message: 'CSV dosyası şifresizdir; danışan adları ve tutarlar içerebilir. Dosyayı yalnızca güvendiğiniz bir yerde saklayın ve paylaşmayın.', confirmText: 'İndir' });
+    if (!ok) return;
     const rows: (string | number)[][] = [
       ['Rapor', periodLabel(period)],
       ['Dönem', `${period.from} – ${period.to}`],

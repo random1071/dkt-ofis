@@ -189,7 +189,7 @@ export function MessageDialog({ clientId, appointmentId, templateKey, phone: pho
             <div className="chips">{contacts.map((ct) => <button type="button" key={ct.phone} className={`chip sm ${to === ct.phone ? 'active' : ''}`} onClick={() => setTo(ct.phone)}>{ct.label}</button>)}</div>
           </Field>
         )}
-        <Field label="Mesaj" help="Göndermeden önce düzenleyebilirsiniz. Uygulama mesajı kendisi göndermez; WhatsApp açılır ve gönder tuşuna siz basarsınız.">
+        <Field label="Mesaj" help="Göndermeden önce düzenleyebilirsiniz. WhatsApp'a yalnızca bu kutudaki metin ve seçili telefon numarası aktarılır; başka hiçbir kayıt gönderilmez. Uygulama mesajı kendisi göndermez; WhatsApp açılır ve gönder tuşuna siz basarsınız.">
           <textarea className="textarea" style={{ minHeight: 160 }} value={text} onChange={(e) => setText(e.target.value)} />
         </Field>
         {!contacts.length && <div className="small warn-text">Bu kişi için telefon numarası kayıtlı değil. Mesajı kopyalayıp istediğiniz uygulamada kullanabilirsiniz.</div>}

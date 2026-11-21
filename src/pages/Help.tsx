@@ -63,12 +63,12 @@ const TUTORIALS: { title: string; steps: string[]; tour?: TourStep[] }[] = [
   },
   {
     title: 'Yedek almak ve geri yüklemek',
-    steps: ['Yedekleme → "Yedek dosyasını indir". Dosya uygulama şifrenizle şifrelenir.', 'Dosyayı cihaz dışına (USB, Google Drive, iCloud, e-posta) kaydedin.', 'Geri yüklemek için Yedekleme → "Yedek dosyası seç" → şifre → önizleme → "Geri yükle".', 'Geri yüklemeden önce mevcut verilerin güvenlik yedeği otomatik alınır.', 'Uygulama ayrıca cihaz içinde otomatik yedekler tutar.'],
+    steps: ['Yedekleme → "Yedek dosyasını indir". Dosya şifrelenir: şifreli kullanımda uygulama şifrenizle, şifresiz kullanımda o an belirlediğiniz yedek şifresiyle.', 'Dosyayı cihaz dışına (USB, Google Drive, iCloud, e-posta) kaydedin.', 'Geri yüklemek için Yedekleme → "Yedek dosyası seç" → şifre → önizleme → "Geri yükle".', 'Geri yüklemeden önce mevcut verilerin güvenlik yedeği otomatik alınır.', 'Uygulama ayrıca cihaz içinde otomatik yedekler tutar.'],
     tour: [{ route: '/yedekleme', target: '[data-testid="export-backup"]', title: 'Yedek', body: 'Haftada bir bu düğmeyle yedek alıp dosyayı cihaz dışına kaydedin.' }],
   },
   {
     title: 'Uygulamayı telefona yüklemek',
-    steps: ['iPhone: Safari\'de adresi açın → Paylaş → "Ana Ekrana Ekle" → Ekle.', 'Android: Chrome\'da adresi açın → ⋮ menü → "Uygulamayı yükle" / "Ana ekrana ekle".', 'Ana ekrandaki "DKT Ofis" simgesinden açın; internet olmadan da çalışır.', 'Telefondaki kayıtlar bilgisayardakinden ayrıdır; aktarım için yedek dosyası kullanılır.'],
+    steps: ['iPhone: Safari\'de adresi açın → Paylaş → "Ana Ekrana Ekle" → "Web Uygulaması olarak aç" açık → Ekle.', 'Android: Chrome\'da adresi açın → ⋮ menü → "Uygulamayı yükle" / "Ana ekrana ekle".', 'Ana ekrandaki "DKT Ofis" simgesinden açın; internet olmadan da çalışır.', 'Telefondaki kayıtlar bilgisayardakinden ayrıdır; aktarım için yedek dosyası kullanılır.'],
   },
   {
     title: 'Dış kurum çalışma saatleri (isteğe bağlı)',
@@ -77,19 +77,20 @@ const TUTORIALS: { title: string; steps: string[]; tour?: TourStep[] }[] = [
 ];
 
 const FAQ: [string, React.ReactNode][] = [
-  ['Kayıtlarım nerede saklanıyor?', <>Tüm kayıtlarınız yalnızca kullandığınız cihazın tarayıcı veritabanında (IndexedDB), uygulama şifrenizle AES-256 şifreli olarak saklanır. Hiçbir sunucuya, buluta veya yapay zekâ servisine gönderilmez.</>],
-  ['Uygulamayı kapatırsam ne olur?', <>Hiçbir şey kaybolmaz. Her işlem kaydedildiği anda veritabanına yazılır ("kaydedildi" bildirimi bunu gösterir). Tekrar açtığınızda şifrenizi girip kaldığınız yerden devam edersiniz.</>],
-  ['Verilerimi başka bir telefona nasıl taşırım?', <>Eski cihazda Yedekleme → "Yedek dosyasını indir". Dosyayı yeni cihaza gönderin (AirDrop, e-posta, WhatsApp, Drive). Yeni cihazda uygulamayı açıp kurulumu yapın, sonra Yedekleme → "Yedek dosyası seç" → eski uygulama şifreniz → "Tamamen değiştir".</>],
+  ['Kayıtlarım nerede saklanıyor?', <>Tüm kayıtlarınız yalnızca kullandığınız cihazın tarayıcı veritabanında (IndexedDB) AES-256 ile şifreli olarak saklanır (şifre korumasını kapatsanız da kayıtlar şifreli kalır). Hiçbir sunucuya, buluta veya yapay zekâ servisine gönderilmez.</>],
+  ['Uygulamayı kapatırsam ne olur?', <>Hiçbir şey kaybolmaz. Her işlem kaydedildiği anda veritabanına yazılır ("kaydedildi" bildirimi bunu gösterir). Tekrar açtığınızda (şifre koruması açıksa şifrenizi girip) kaldığınız yerden devam edersiniz.</>],
+  ['Verilerimi başka bir telefona nasıl taşırım?', <>Eski cihazda Yedekleme → "Yedek dosyasını indir". Dosyayı yeni cihaza gönderin (AirDrop, e-posta, WhatsApp, Drive). Yeni cihazda uygulamayı açıp kurulumu yapın, önce yeni cihazda da bir yedek alın, sonra Yedekleme → "Yedek dosyası seç" → yedeğin şifresi → "Tamamen değiştir". Dikkat: "Tamamen değiştir" yeni cihazdaki mevcut kayıtların yerine yedeği koyar.</>],
   ['Nasıl yedek alırım?', <>Yedekleme ekranında "Yedek dosyasını indir". Uygulama ayrıca cihaz içinde otomatik yedek tutar, ancak cihaz kaybına karşı dosyayı cihaz dışında saklamanız gerekir. Bilgisayarda Chrome/Edge ile bir klasör seçerseniz yedekler oraya otomatik yazılır.</>],
-  ['Yedeği nasıl geri yüklerim?', <>Yedekleme → "Yedek dosyası seç" → dosyayı oluşturduğunuz andaki uygulama şifresi (veya kurtarma kodu) → içerik önizlemesi → "Geri yükle". İşlemden önce mevcut veriler otomatik olarak yedeklenir.</>],
+  ['Yedeği nasıl geri yüklerim?', <>Yedekleme → "Yedek dosyası seç" → dosyayı oluşturduğunuz andaki uygulama şifresi, kurtarma kodu veya yedek şifresi → içerik önizlemesi → "Geri yükle". İşlemden önce mevcut veriler otomatik olarak yedeklenir.</>],
   ['Kayıtlarım neden diğer cihazımda otomatik görünmüyor?', <>Uygulama ücretsiz ve tamamen yerel çalışır; ücretli bir bulut sunucusu kullanmadığı için cihazlar arasında <b>otomatik eşitleme yoktur</b>. Her cihaz kendi kayıtlarını tutar. Aktarmak için yedek dosyasını kullanın. Önerimiz: tek bir ana cihaz kullanmak.</>],
   ['Randevuyu nasıl değiştiririm?', <>Randevuya dokunun → "Düzenle" (saat, süre, ücret, danışan) veya "Taşı / Ertele". Bilgisayarda randevuyu takvimde sürükleyebilirsiniz. Tekrarlayan randevularda "Sadece bu", "Bu ve sonrakiler" veya "Tüm seri" seçilebilir.</>],
   ['Kısmi ödemeyi nasıl kaydederim?', <>Ödeme kaydet ekranında alınan tutarı yazmanız yeterli. Seans "Kısmi ödendi" görünür; kalan kısım açık alacaklarda listelenir. Kalan ödeme geldiğinde tekrar "Ödeme kaydet".</>],
   ['Paketler nasıl çalışır?', <>Paket satıldığında fiyat bir kez gelir sayılır. Pakete bağlı her tamamlanan seansta paketten 1 seans düşülür; ikinci kez gelir yazılmaz. İptal/gelmeme durumunda düşülüp düşülmeyeceğini siz seçersiniz. Şu an seans başı ödeme kullanıyorsanız paketleri kullanmanız gerekmez.</>],
   ['Şifremi unutursam ne olur?', <>Kilit ekranında "Şifremi unuttum" → kurulumda verilen kurtarma kodu → yeni şifre. Kurtarma kodu da yoksa şifreli kayıtlara ulaşılamaz; bu yüzden kodu güvenli yerde saklayın.</>],
+  ['Şifre zorunlu mu?', <>Hayır. Kurulumda "Şifresiz devam et" seçebilir, şifre korumasını sonradan Ayarlar → Güvenlik'ten açıp kapatabilirsiniz; kayıtlarınız silinmez. Şifresiz kullanımda kayıtlar cihazda yine şifreli saklanır, ancak uygulama şifre sormadan açılır: cihazın kilidi açıkken eline alan herkes kayıtları görebilir. Danışan bilgileri için şifre korumasını öneririz.</>],
   ['İnternet olmadan çalışır mı?', <>Evet. Uygulama bir kez açılıp yüklendikten sonra internet olmadan açılır ve tüm kayıtlarınızla çalışır. WhatsApp mesajı göndermek için internet gerekir.</>],
   ['Mesajlar otomatik gönderiliyor mu?', <>Hayır. Uygulama hiçbir mesajı kendiliğinden göndermez. "WhatsApp'ta aç" mesajı hazırlar; göndermek için WhatsApp'ta gönder tuşuna sizin basmanız gerekir.</>],
-  ['Ücretli bir şey var mı?', <>Hayır. Uygulama abonelik, deneme süresi veya ücretli servis kullanmaz. Barındırma ücretsiz GitHub Pages üzerindedir.</>],
+  ['Ücretli bir şey var mı?', <>Hayır. Uygulama abonelik, deneme süresi veya ücretli servis kullanmaz. Uygulama ücretsiz Cloudflare Workers üzerinde yalnızca statik dosya olarak yayınlanır; kayıtlarınız oraya gönderilmez.</>],
 ];
 
 export function HelpPage() {
@@ -147,7 +148,7 @@ export function HelpPage() {
             <li><b>Edge'de yükleme:</b> ⋯ menü → "Uygulamalar" → "Bu siteyi uygulama olarak yükle" → "Yükle".</li>
             <li><b>Yükleme seçeneği yoksa (ör. Safari / Firefox):</b> sayfayı yer imlerine ekleyin; macOS Safari'de Dosya → "Dock'a Ekle" seçeneği de kullanılabilir.</li>
             <li><b>Açmak:</b> yüklendikten sonra Başlat menüsü (Windows), Launchpad/Dock (macOS) veya masaüstündeki <b>DKT Ofis</b> simgesinden açın. Kendi penceresinde çalışır.</li>
-            <li><b>Kilidi açmak:</b> şifrenizi girip "Kilidi aç". Belirlediğiniz süre işlem yapılmazsa otomatik kilitlenir; sol alttaki "Kilitle" ile elle kilitleyebilirsiniz.</li>
+            <li><b>Kilidi açmak (şifre koruması açıksa):</b> şifrenizi girip "Kilidi aç". Belirlediğiniz süre işlem yapılmazsa otomatik kilitlenir; sol alttaki "Kilitle" ile elle kilitleyebilirsiniz.</li>
             <li><b>Sol menü:</b> Genel Bakış, Bugün, Takvim; Ofis (Danışanlar, Seanslar, Bekleme Listesi); Finans (Ödemeler, Paketler, Gelir-Gider, Raporlar); Düzen; Sistem.</li>
             <li><b>Takvim:</b> Gün / Hafta / Ay / Ajanda görünümleri. Boş saate tıklayın → yeni randevu. Randevuyu sürükleyerek taşıyın.</li>
             <li><b>Danışan:</b> Danışanlar → Yeni danışan; profilde ⋯ → "Bilgileri düzenle".</li>
@@ -168,9 +169,9 @@ export function HelpPage() {
               <li>Uygulama adresini <b>Safari</b>'de açın (iPhone'da yükleme yalnızca Safari'den yapılabilir; iOS 16.4+ ile Chrome'daki Paylaş menüsünden de mümkündür).</li>
               <li>Ekranın altındaki <b>Paylaş</b> simgesine <Share style={{ display: 'inline', width: 16, height: 16, verticalAlign: -3 }} /> dokunun.</li>
               <li>Listeyi aşağı kaydırıp <b>"Ana Ekrana Ekle"</b> <PlusSquare style={{ display: 'inline', width: 16, height: 16, verticalAlign: -3 }} /> seçeneğine dokunun.</li>
-              <li>İsmin <b>"DKT Ofis"</b> olduğunu kontrol edin.</li>
+              <li>İsmin <b>"DKT Ofis"</b> olduğunu kontrol edin. Ekranda <b>"Web Uygulaması olarak aç"</b> anahtarı varsa <b>açık</b> olsun.</li>
               <li>Sağ üstteki <b>Ekle</b>'ye dokunun.</li>
-              <li>Ana ekranda beliren DKT Ofis simgesinden açın. Artık normal bir uygulama gibi tam ekran çalışır.</li>
+              <li>Ana ekranda beliren DKT Ofis simgesinden açın. Doğru kurulduysa üstte Safari adres çubuğu, altta Safari araç çubuğu <b>görünmez</b>; uygulama kendi penceresinde açılır.</li>
               <li><b>Mobil menü:</b> alttaki çubuk — Genel, Takvim, ortadaki <b>+</b> (hızlı ekle), Danışanlar ve Menü (diğer tüm bölümler).</li>
               <li><b>Randevu:</b> Takvim → güne dokun → boş saate dokun. Değiştirmek için randevuya dokunun → Düzenle veya Taşı / Ertele.</li>
               <li><b>Ödeme:</b> + → Ödeme veya Bugün ekranında "Ödeme al".</li>
@@ -179,6 +180,7 @@ export function HelpPage() {
             <IphoneIllustration />
           </div>
           <div className="callout info mt-4"><CircleHelp /><div className="callout-body small">iPhone'da Safari'de ve ana ekrana eklenen uygulamada kayıtlar ayrı tutulabilir. Uygulamayı yükledikten sonra kurulumu ana ekrandaki simgeden yapın ve her zaman oradan açın. Apple, uzun süre (haftalarca) açılmayan web sitelerinin verilerini temizleyebilir; ana ekrana eklenen uygulamalar bundan korunur. Yine de düzenli yedek alın.</div></div>
+          <div className="callout warn mt-3"><CircleHelp /><div className="callout-body small"><b>Simge Safari çubuklarıyla açılıyorsa:</b> ana ekrandaki eski simgeyi silin (içinde kayıt varsa önce Yedekleme'den yedek alın). Safari'de adresin <b>dkt-ofis.terapiofisi.workers.dev</b> olduğunu kontrol edin, Paylaş → "Ana Ekrana Ekle" adımlarını "Web Uygulaması olarak aç" açık olacak şekilde tekrarlayın.</div></div>
         </div>
       )}
 
@@ -229,6 +231,7 @@ export function HelpPage() {
             <li><b>Otomatik cihazlar arası eşitleme yok.</b> Ücretsiz ve gizlilik odaklı olması için veriler sunucuya gönderilmez. Cihazlar arası aktarım yedek dosyasıyla yapılır.</li>
             <li><b>Tarayıcı depolaması tam güvence değildir.</b> Cihaz kaybı, arıza veya tarayıcı verilerinin silinmesi ("geçmişi temizle") kayıtları silebilir. Düzenli yedek dosyası alın.</li>
             <li><b>Şifre ve kurtarma kodu kaybolursa</b> şifreli kayıtlara kimse erişemez.</li>
+            <li><b>Şifresiz kullanımda</b> kayıtlar cihazda şifreli kalır, ancak uygulama şifre sormadan açılır; cihazın kilidi açıkken eline alan herkes kayıtları görebilir.</li>
             <li><b>Güvenlik:</b> cihaz içi şifreleme, sunucuda yönetilen profesyonel bir kimlik doğrulama sistemiyle aynı seviyede değildir. Cihazınızı ekran kilidiyle koruyun.</li>
             <li><b>Bildirimler:</b> uygulama kapalıyken telefona hatırlatma bildirimi gönderemez. Hatırlatmalar uygulama açıldığında Genel Bakış'ta görünür.</li>
             <li><b>Mesajlar</b> otomatik gönderilmez; WhatsApp'ta hazırlanır, gönderimi siz yaparsınız.</li>
