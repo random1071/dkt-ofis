@@ -71,6 +71,10 @@ const TUTORIALS: { title: string; steps: string[]; tour?: TourStep[] }[] = [
     steps: ['iPhone: Safari\'de adresi açın → Paylaş → "Ana Ekrana Ekle" → "Web Uygulaması olarak aç" açık → Ekle.', 'Android: Chrome\'da adresi açın → ⋮ menü → "Uygulamayı yükle" / "Ana ekrana ekle".', 'Ana ekrandaki "DKT Ofis" simgesinden açın; internet olmadan da çalışır.', 'Telefondaki kayıtlar bilgisayardakinden ayrıdır; aktarım için yedek dosyası kullanılır.'],
   },
   {
+    title: 'Çalışma saatlerini ayarlamak',
+    steps: ['Ayarlar → "Çalışma saatleri ve müsaitlik". Varsayılan düzen haftanın 7 günü 07.00–21.00.', 'Her günün başlangıç ve bitiş saatini ayrı ayrı değiştirin; günün kutusunu kaldırırsanız o gün kapalı olur.', '"Tüm açık günlere uygula" bir günün saatini diğer açık günlere kopyalar; "Haftanın 7 günü 07:00–21:00" standart düzeni geri getirir.', '"Çalışma saatlerini kaydet"e basın. Boş saat önerileri, çakışma uyarıları ve tekrarlayan randevular bu saatlere göre çalışır; kayıtlı randevular değişmez.'],
+  },
+  {
     title: 'Seans notu yazmak',
     steps: ['Bugün ekranında randevudaki "Seans notu" düğmesine, randevu ayrıntısındaki "Seans notu yaz"a veya danışan dosyasında Seans Notları → "Yeni seans notu"na dokunun.', 'Şablon seçin: Serbest not, SOAP (Subjektif, Objektif, Değerlendirme, Plan) veya Kısa seans notu. Kendi şablonlarınızı Not ve Form Şablonları ekranında hazırlarsınız.', 'Yazdıkça not birkaç saniyede bir şifreli olarak "taslak" kaydedilir; pencereyi kapatıp sonra devam edebilirsiniz.', 'Bitince "Notu tamamla". Sonradan düzenlerseniz önceki hâl "Sürümler"de saklanır ve geri dönebilirsiniz.', 'Silinen notlar danışan dosyasında Seans Notları → "Silinenler"de durur; oradan geri alabilirsiniz.'],
   },

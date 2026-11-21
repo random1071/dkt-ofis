@@ -86,7 +86,14 @@ Sağ üstteki **⋯** menüsünde ayrıca şunlar var: **Seans notu yaz**, **Dan
 
 ## 9. Takvim ve bekleme listesi nasıl kullanılır?
 
-- **Takvim:** **Gün / Hafta / Ay / Ajanda** görünümleri vardır. Çalışma saatleri ve kapalı zamanlar **Ayarlar**'dan belirlenir.
+- **Takvim:** **Gün / Hafta / Ay / Ajanda** görünümleri vardır.
+- **Çalışma saatleri:** Haftanın 7 günü **07.00–21.00** olarak ayarlıdır. Değiştirmek için **Ayarlar → Çalışma saatleri ve müsaitlik** bölümünü açın:
+  - Her günün başlangıç ve bitiş saatini ayrı ayrı değiştirebilir, günün yanındaki kutuyu kaldırarak o günü kapatabilirsiniz.
+  - **Tüm açık günlere uygula** düğmesi bir günün saatini diğer açık günlere kopyalar.
+  - **Haftanın 7 günü 07:00–21:00** düğmesi standart düzeni geri getirir.
+  - Değişikliklerden sonra **Çalışma saatlerini kaydet**'e basın.
+- **Saatler neyi etkiler:** Boş saat önerileri, çakışma uyarıları ve tekrarlayan randevular bu saatlere göre çalışır. Çalışma saati dışındaki bir randevu engellenmez, yalnızca uyarı gösterilir. Kayıtlı randevular saat değişikliğinden etkilenmez.
+- **Kapalı zaman:** Tatil veya kişisel izinler için **Ayarlar → Zaman kapat**'ı kullanın.
 - **Bekleme listesi:** **Menü → Bekleme Listesi → Yeni**. Uygun gün ve saati yazın. Takvimde boş saat açılınca uygulama size uygun kişileri gösterir.
 
 ## 10. Seans nasıl tamamlanır?

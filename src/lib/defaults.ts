@@ -7,6 +7,32 @@ const day = (enabled: boolean, start = '09:00', end = '18:00'): DayHours => ({
   breaks: enabled ? [{ start: '12:30', end: '13:30', label: 'Öğle arası' }] : [],
 });
 
+/** Varsayılan çalışma düzeni: haftanın 7 günü 07.00–21.00, mola yok (Ayarlar'dan gün gün değiştirilebilir). */
+export const STANDARD_START = '07:00';
+export const STANDARD_END = '21:00';
+export const WORKING_HOURS_VERSION = 2;
+
+export function standardWeek(): Record<string, DayHours> {
+  const w: Record<string, DayHours> = {};
+  for (let i = 1; i <= 7; i++) w[String(i)] = { enabled: true, start: STANDARD_START, end: STANDARD_END, breaks: [] };
+  return w;
+}
+
+/** Önceki sürümlerin varsayılan çalışma saatleri — yalnızca hiç değiştirilmemiş kurulumları tanımak için */
+export function legacyDefaultWeek(): Record<string, DayHours> {
+  return { '1': day(true), '2': day(true), '3': day(true), '4': day(true), '5': day(true), '6': day(true, '10:00', '15:00'), '7': day(false) };
+}
+
+/** İki haftalık çalışma düzeni aynı mı (alan sırasından bağımsız) */
+export function sameWeek(a: Record<string, DayHours> | undefined, b: Record<string, DayHours>): boolean {
+  if (!a) return false;
+  const norm = (w: Record<string, DayHours>) => Array.from({ length: 7 }, (_, i) => {
+    const d = w[String(i + 1)];
+    return d ? [d.enabled, d.start, d.end, (d.breaks ?? []).map((x) => [x.start, x.end, x.label])] : null;
+  });
+  return JSON.stringify(norm(a)) === JSON.stringify(norm(b));
+}
+
 export function defaultSettings(now: string): Settings {
   return {
     id: 'main',
@@ -18,15 +44,8 @@ export function defaultSettings(now: string): Settings {
     defaultDuration: 45,
     defaultFee: 0,
     slotStep: 15,
-    workingHours: {
-      '1': day(true),
-      '2': day(true),
-      '3': day(true),
-      '4': day(true),
-      '5': day(true),
-      '6': day(true, '10:00', '15:00'),
-      '7': day(false),
-    },
+    workingHours: standardWeek(),
+    workingHoursVersion: WORKING_HOURS_VERSION,
     specialDays: [],
     paymentMethods: ['Nakit', 'Havale / EFT', 'Kredi kartı', 'Diğer'],
     incomeCategories: ['Bireysel seans', 'Paket satışı', 'Diğer gelir'],

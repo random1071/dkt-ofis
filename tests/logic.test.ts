@@ -51,7 +51,13 @@ describe('Uçtan uca iş akışı (veri katmanı)', () => {
     expect(seriesDates({ ...base, freq: 'monthly', startDate: '2026-01-31' }, '2026-01-01', '2026-04-30')).toEqual(['2026-01-31', '2026-02-28', '2026-03-31', '2026-04-30']);
   });
 
-  it('çakışmaları tespit eder', () => {
+  it('çakışmaları tespit eder', async () => {
+    // Kapalı gün ve mola kurallarını sınamak için açıkça ayarlanır (varsayılan: 7 gün 07.00–21.00, mola yok)
+    const prev = S.getSettings().workingHours;
+    const wh = JSON.parse(JSON.stringify(prev));
+    wh['7'] = { ...wh['7'], enabled: false };
+    wh['2'] = { ...wh['2'], breaks: [{ start: '12:30', end: '13:30', label: 'Öğle arası' }] };
+    await S.updateSettings({ workingHours: wh });
     const c = checkConflicts(db(), S.getSettings(), { start: '2026-11-02T10:15', end: '2026-11-02T11:00' });
     expect(c.some((x) => x.kind === 'overlap')).toBe(true);
     const sunday = checkConflicts(db(), S.getSettings(), { start: '2026-11-08T10:00', end: '2026-11-08T10:45' });
@@ -61,6 +67,7 @@ describe('Uçtan uca iş akışı (veri katmanı)', () => {
     const slots = freeSlots(db(), S.getSettings(), '2026-11-23', 45);
     expect(slots).not.toContain('10:00');
     expect(slots).toContain('09:00');
+    await S.updateSettings({ workingHours: prev });
   });
 
   it('seans tamamlanır, kısmi + kalan ödeme ile bakiye sıfırlanır', async () => {

@@ -383,6 +383,8 @@ export interface Settings {
   defaultFee: number;
   slotStep: number;
   workingHours: Record<string, DayHours>; // '1'..'7'
+  /** Çalışma saati düzeni sürümü (2 = 7 gün 07.00–21.00 varsayılanına geçiş yapıldı) */
+  workingHoursVersion?: number;
   specialDays: SpecialDay[];
   paymentMethods: string[];
   incomeCategories: string[];

@@ -8,7 +8,7 @@ import {
 import * as A from '../lib/actions';
 import { fmtDate, fmtDateTime, today, WEEKDAYS } from '../lib/dates';
 import { describeExternal } from '../lib/schedule';
-import { BLOCK_KIND_LABEL, SESSION_STATUS_LABEL } from '../lib/defaults';
+import { BLOCK_KIND_LABEL, SESSION_STATUS_LABEL, sameWeek, standardWeek, STANDARD_END, STANDARD_START } from '../lib/defaults';
 import type { DayHours, Settings } from '../lib/types';
 import { BlockForm, ExternalForm } from '../components/MiscForms';
 import { attempt, confirmDialog, Field, HelpTip, Modal, MoneyInput, num, openModal, promptDialog, Segmented, useCloseModal, useRoute } from '../components/ui';
@@ -312,8 +312,13 @@ function WorkingHours() {
   useEffect(() => setWh(s.workingHours), [s.workingHours]);
   const changed = JSON.stringify(wh) !== JSON.stringify(s.workingHours);
   const set = (d: string, patch: Partial<DayHours>) => setWh({ ...wh, [d]: { ...wh[d], ...patch } });
+  const isStandard = sameWeek(wh, standardWeek());
   return (
     <div className="col gap-2">
+      <div className="row wrap gap-2" style={{ paddingBottom: 6 }}>
+        <span className="small muted" style={{ flex: '1 1 280px' }}>Her günün saatlerini ayrı ayrı ayarlayabilir, istediğiniz günü kapatabilirsiniz. Randevular, boş saat önerileri, çakışma uyarıları ve tekrarlayan randevular bu saatlere göre çalışır. Var olan randevular bu ayardan etkilenmez.</span>
+        <button className="btn sm" disabled={isStandard} onClick={() => setWh(standardWeek())} data-testid="hours-standard">Haftanın 7 günü {STANDARD_START}–{STANDARD_END}</button>
+      </div>
       {WEEKDAYS.map((name, i) => {
         const d = String(i + 1);
         const h = wh[d];
@@ -322,7 +327,8 @@ function WorkingHours() {
             <label className="check" style={{ width: 130 }}><input type="checkbox" checked={h.enabled} onChange={(e) => set(d, { enabled: e.target.checked })} /> <b className="small">{name}</b></label>
             {h.enabled ? (
               <>
-                <div className="row"><input className="input" type="time" step={300} value={h.start} onChange={(e) => set(d, { start: e.target.value })} style={{ width: 120 }} /><span className="faint">–</span><input className="input" type="time" step={300} value={h.end} onChange={(e) => set(d, { end: e.target.value })} style={{ width: 120 }} /></div>
+                <div className="row"><input className="input" type="time" step={300} value={h.start} onChange={(e) => set(d, { start: e.target.value })} style={{ width: 120 }} aria-label={`${name} başlangıç`} data-testid={`hours-start-${d}`} /><span className="faint">–</span><input className="input" type="time" step={300} value={h.end} onChange={(e) => set(d, { end: e.target.value })} style={{ width: 120 }} aria-label={`${name} bitiş`} data-testid={`hours-end-${d}`} /></div>
+                <button className="btn ghost sm" title="Bu günün saatlerini ve molalarını tüm açık günlere uygula" onClick={() => { const next = { ...wh }; for (const k of Object.keys(next)) if (next[k].enabled) next[k] = { ...next[k], start: h.start, end: h.end, breaks: h.breaks.map((x) => ({ ...x })) }; setWh(next); }}>Tüm açık günlere uygula</button>
                 <div className="row wrap">
                   {h.breaks.map((b, bi) => (
                     <span key={bi} className="chip sm" style={{ cursor: 'default' }}>
@@ -345,8 +351,12 @@ function WorkingHours() {
       })}
       <div className="row end gap-2">
         {changed && <button className="btn" onClick={() => setWh(s.workingHours)}>Vazgeç</button>}
-        <button className="btn primary" disabled={!changed} onClick={() => {
-          for (const [d, h] of Object.entries(wh)) if (h.enabled && h.end <= h.start) return toast(`${WEEKDAYS[Number(d) - 1]}: bitiş saati başlangıçtan sonra olmalı.`, 'error');
+        <button className="btn primary" disabled={!changed} data-testid="hours-save" onClick={() => {
+          for (const [d, h] of Object.entries(wh)) {
+            if (h.enabled && (!h.start || !h.end)) return toast(`${WEEKDAYS[Number(d) - 1]}: başlangıç ve bitiş saatini girin.`, 'error');
+            if (h.enabled && h.end <= h.start) return toast(`${WEEKDAYS[Number(d) - 1]}: bitiş saati başlangıçtan sonra olmalı.`, 'error');
+            for (const b of h.breaks ?? []) if (h.enabled && (b.end <= b.start || b.start < h.start || b.end > h.end)) return toast(`${WEEKDAYS[Number(d) - 1]}: mola (${b.start}–${b.end}) çalışma saatleri içinde olmalı.`, 'error');
+          }
           attempt(() => updateSettings({ workingHours: wh }, 'Çalışma saatleri güncellendi'), 'Çalışma saatleri kaydedildi');
         }}>Çalışma saatlerini kaydet</button>
       </div>
