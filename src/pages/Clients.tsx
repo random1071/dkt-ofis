@@ -165,10 +165,10 @@ export function ClientDetailPage({ id }: { id: string }) {
   return (
     <div>
       <button className="btn ghost sm mb-3" onClick={() => navigate('/danisanlar')}><ChevronLeft /> Danışanlar</button>
-      <div className="card card-pad mb-4">
+      <div className="card card-pad mb-4 client-head">
         <div className="row top gap-4 wrap">
           <Avatar name={c.name} size="lg" />
-          <div className="grow" style={{ minWidth: 200 }}>
+          <div className="grow client-head-main" style={{ minWidth: 200 }}>
             <h2 className="serif" style={{ fontSize: '1.9rem', lineHeight: 1.15 }}>{c.name}</h2>
             <div className="row wrap mt-2">
               {c.archived && <span className="badge">Arşivde</span>}
@@ -187,7 +187,7 @@ export function ClientDetailPage({ id }: { id: string }) {
             <button className="btn" onClick={() => openModal(<MessageDialog clientId={c.id} templateKey={ledger.balance > 0 ? 'payment' : 'followup'} />)}><MessageCircle /> Mesaj</button>
             <button className="btn" onClick={() => openModal(<PaymentForm clientId={c.id} />)}><Wallet /> Ödeme</button>
             <button className="btn primary" onClick={() => openModal(<AppointmentForm initial={{ clientId: c.id }} />)}><CalendarPlus /> Randevu</button>
-            <Dropdown trigger={(o) => <button className="btn icon" onClick={o} aria-label="Diğer"><MoreHorizontal /></button>}>
+            <div className="client-head-menu"><Dropdown trigger={(o) => <button className="btn icon" onClick={o} aria-label="Diğer" data-testid="client-more"><MoreHorizontal /></button>}>
               {(cl) => (
                 <>
                   <button onClick={() => { cl(); openModal(<ClientForm client={c} />); }}><Pencil /> Bilgileri düzenle</button>
@@ -224,7 +224,7 @@ export function ClientDetailPage({ id }: { id: string }) {
                   )}
                 </>
               )}
-            </Dropdown>
+            </Dropdown></div>
           </div>
         </div>
       </div>

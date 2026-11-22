@@ -71,40 +71,7 @@
   color-scheme: light;
 }
 
-:root[data-theme='dark'] {
-  --bg: #1b1718;
-  --bg-elev: #201b1c;
-  --surface: #252021;
-  --surface-2: #2e2829;
-  --surface-3: #372f31;
-  --border: #3a3234;
-  --border-strong: #4b4144;
-  --text: #f0e7e4;
-  --text-2: #c2b4b2;
-  --text-3: #8e8183;
-  --accent: #d6a5a0;
-  --accent-strong: #e6bdb8;
-  --accent-soft: #3d2c2d;
-  --accent-ink: #2a1b1c;
-  --sand: #d5b896;
-  --sand-soft: #3a3027;
-  --danger: #e39385;
-  --danger-soft: #3f2a27;
-  --warn: #dbb26e;
-  --warn-soft: #3a3022;
-  --info: #a3b5ca;
-  --info-soft: #28303a;
-  --ok: #9dbca5;
-  --ok-soft: #26332a;
-  --violet: #c4b0c8;
-  --violet-soft: #332a34;
-  --focus: #d6a5a055;
-  --overlay: rgba(0, 0, 0, 0.55);
-  --sh-1: 0 1px 2px rgba(0, 0, 0, 0.3);
-  --sh-2: 0 1px 2px rgba(0, 0, 0, 0.25), 0 4px 14px rgba(0, 0, 0, 0.25);
-  --sh-3: 0 10px 34px rgba(0, 0, 0, 0.5);
-  color-scheme: dark;
-}
+/* Koyu tema kaldırıldı: uygulama her zaman açık temada görünür. */
 
 * { box-sizing: border-box; }
 html, body, #root { height: 100%; }
@@ -368,7 +335,6 @@ input[type='date'].input, input[type='time'].input { min-width: 0; }
 .badge.violet { background: var(--violet-soft); color: var(--violet); }
 .badge.accent { background: var(--accent-soft); color: var(--accent-strong); }
 .badge.sand { background: var(--sand-soft); color: #86684a; }
-:root[data-theme='dark'] .badge.sand { color: var(--sand); }
 .badge-count { min-width: 20px; height: 20px; padding: 0 6px; border-radius: 10px; background: var(--danger); color: #fff; font-size: 0.68rem; font-weight: 700; display: inline-grid; place-items: center; }
 
 .avatar { width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; font-weight: 650; font-size: 0.85rem; flex: none; background: var(--accent-soft); color: var(--accent-strong); }
@@ -446,6 +412,7 @@ table.table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
   .modal-foot .left { flex: 0 0 auto; }
 }
 
+.menu-floating { position: fixed !important; z-index: 1000 !important; overflow-y: auto; max-width: calc(100vw - 16px); }
 .menu { position: absolute; z-index: 60; min-width: 200px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); box-shadow: var(--sh-3); padding: 6px; animation: rise 0.12s var(--ease); }
 .menu button, .menu a { display: flex; align-items: center; gap: 10px; width: 100%; padding: 9px 10px; border: 0; background: none; border-radius: 8px; cursor: pointer; text-align: left; font-size: 0.875rem; color: var(--text); text-decoration: none; }
 .menu button:hover, .menu a:hover { background: var(--surface-2); text-decoration: none; }
@@ -457,12 +424,10 @@ table.table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
 /* ─────────────── Bildirim (toast) ─────────────── */
 .toasts { position: fixed; z-index: 200; right: var(--s6); bottom: var(--s6); display: flex; flex-direction: column; gap: var(--s2); pointer-events: none; max-width: 420px; }
 .toast { pointer-events: auto; display: flex; align-items: flex-start; gap: var(--s3); padding: 12px 14px; border-radius: var(--r-lg); background: #33292b; color: #faf3f0; box-shadow: var(--sh-3); font-size: 0.875rem; animation: rise 0.2s var(--ease); line-height: 1.4; }
-:root[data-theme='dark'] .toast { background: #f0e7e4; color: #1b1718; }
 .toast svg { width: 18px; height: 18px; flex: none; margin-top: 1px; }
 .toast.success svg { color: #9fd1ad; }
 .toast.error svg { color: #f0a090; }
 .toast.warning svg { color: #e9c37c; }
-:root[data-theme='dark'] .toast.success svg { color: var(--accent-strong); filter: brightness(0.6); }
 .toast button { background: none; border: 0; color: inherit; font-weight: 650; cursor: pointer; padding: 0; text-decoration: underline; }
 @media (max-width: 720px) { .toasts { left: var(--s3); right: var(--s3); bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 12px); max-width: none; } }
 
@@ -706,3 +671,39 @@ details.faq .faq-body { padding: 0 var(--s5) var(--s4); color: var(--text-2); fo
   .update-bar, .modal-backdrop { display: none !important; }
   @page { margin: 14mm; }
 }
+
+/* Danışan başlığı: ⋯ menüsü her ekran boyutunda kartın sağ üst köşesinde sabit */
+.client-head { position: relative; }
+.client-head .client-head-main { padding-right: 48px; }
+.client-head .client-head-menu { position: absolute; top: var(--s4); right: var(--s4); z-index: 2; }
+
+/* ─────────────── Takvim: pastel ve modern görünüm ─────────────── */
+.cal-head { background: linear-gradient(180deg, var(--surface) 0%, color-mix(in srgb, var(--accent-soft) 35%, var(--surface)) 100%); }
+.cal-head .day-h.weekend { color: #7f6fae; }
+.cal-head .day-h.today .dnum { background: linear-gradient(135deg, #d98ca0, var(--accent)); box-shadow: 0 2px 8px color-mix(in srgb, var(--accent) 35%, transparent); }
+.cal-col.weekend { background: color-mix(in srgb, #ece7f8 45%, transparent); }
+.cal-col.is-today { background: linear-gradient(180deg, color-mix(in srgb, var(--accent-soft) 55%, transparent), color-mix(in srgb, var(--accent-soft) 25%, transparent)); }
+.cal-event {
+  border-radius: 9px; border-left: 3px solid var(--ev);
+  background: linear-gradient(160deg, color-mix(in srgb, var(--ev) 26%, #fff) 0%, color-mix(in srgb, var(--ev) 12%, #fff) 100%);
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--ev) 22%, transparent), 0 2px 8px color-mix(in srgb, var(--ev) 10%, transparent);
+}
+.cal-event .ev-t { color: color-mix(in srgb, var(--ev) 65%, #3a2f31); }
+.cal-event .ev-n { color: #2f2729; }
+.cal-event.st-completed { background: linear-gradient(160deg, color-mix(in srgb, var(--ev) 18%, #fff), color-mix(in srgb, var(--ev) 8%, #fff)); }
+.cal-legend i { width: 12px; height: 12px; border-radius: 4px; }
+.month-cell.today .mnum { background: linear-gradient(135deg, #d98ca0, var(--accent)); }
+
+/* iPhone: haftanın 7 günü tek ekranda (yatay kaydırma yok) */
+.cal-compact .cal-head .day-h { padding: 6px 0 5px; font-size: 0.62rem; letter-spacing: 0.01em; min-width: 0; overflow: hidden; }
+.cal-compact .cal-head .day-h .dnum { font-size: 0.95rem; }
+.cal-compact .cal-head .day-h.today .dnum { width: 24px; height: 24px; font-size: 0.8rem; }
+.cal-compact .cal-head .day-h .day-note { font-size: 0.52rem; }
+.cal-compact .cal-time { right: 3px; font-size: 0.56rem; }
+.cal-compact .cal-col { min-width: 0; }
+.cal-compact .cal-event { padding: 2px 3px; font-size: 0.58rem; line-height: 1.2; border-left-width: 2px; border-radius: 6px; }
+.cal-compact .cal-event .ev-t { font-size: 0.56rem; letter-spacing: -0.01em; }
+.cal-compact .cal-event .ev-n { font-size: 0.6rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cal-compact .cal-col .blockband, .cal-compact .cal-col .extband { font-size: 0.5rem; padding: 2px; }
+.cal-compact .cal-slot-hover { font-size: 0.55rem; padding: 2px; }
+@media (max-width: 720px) { .cal-legend { gap: 8px 12px; font-size: 0.72rem; } }

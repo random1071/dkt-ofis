@@ -175,7 +175,7 @@ export function SettingsPage() {
 
         <Section id="gorunum" icon={<Palette />} title="Görünüm">
           <div className="col gap-4">
-            <Field label="Tema"><Segmented value={s.theme} onChange={(v) => save({ theme: v }, 'Tema değişti')} options={[{ id: 'light', label: 'Açık' }, { id: 'dark', label: 'Koyu' }, { id: 'system', label: 'Cihaza göre' }]} /></Field>
+            <div className="small muted">DKT Ofis her zaman açık, pastel temada görünür; telefonunuz koyu modda olsa bile değişmez.</div>
             <Field label="Randevu durum renkleri">
               <div className="row wrap gap-4">
                 {(Object.keys(SESSION_STATUS_LABEL) as (keyof typeof SESSION_STATUS_LABEL)[]).map((k) => (

@@ -107,11 +107,11 @@ export function CalendarPage() {
       {view === 'month' && <MonthView date={date} onPick={(d) => { setDate(d); setView('day'); }} />}
       {view === 'agenda' && <AgendaView from={date} />}
 
-      <div className="legend mt-4 hide-mobile">
+      <div className="legend cal-legend mt-4" data-testid="cal-legend">
         {(['planned', 'completed', 'cancelled', 'noshow', 'postponed'] as const).map((k) => <span key={k}><i style={{ background: s.statusColors[k] }} />{SESSION_STATUS_LABEL[k]}</span>)}
         <span><i style={{ background: 'repeating-linear-gradient(135deg, var(--info) 0 3px, transparent 3px 6px)', border: '1px dashed var(--info)' }} />Dış kurum</span>
         <span><i style={{ background: 'var(--danger-soft)' }} />Kapalı zaman</span>
-        <span className="faint">İpucu: boş bir saate dokunarak randevu ekleyin{!mobile ? '; randevuyu sürükleyerek taşıyın' : ''}.</span>
+        <span className="faint hide-mobile">İpucu: boş bir saate dokunarak randevu ekleyin{!mobile ? '; randevuyu sürükleyerek taşıyın' : ''}.</span>
       </div>
     </div>
   );
@@ -177,8 +177,10 @@ function TimeGrid({ days, onPickDay }: { days: string[]; onPickDay: (d: string) 
   maxM = Math.min(1440, Math.ceil(maxM / 60) * 60 + 60);
   const H = (maxM - minM) * PX;
   const y = (m: number) => (m - minM) * PX;
-  const timeColW = mobile ? 44 : 56;
-  const minCol = days.length > 1 ? (mobile ? 92 : 110) : 0;
+  // Mobilde hafta görünümü: 7 günün hepsi ekrana sığar (yatay kaydırma yok); sütunlar eşit paylaşılır.
+  const compact = mobile && days.length > 1;
+  const timeColW = compact ? 32 : mobile ? 44 : 56;
+  const minCol = days.length > 1 && !mobile ? 84 : 0;
   const gridCols = `${timeColW}px repeat(${days.length}, minmax(${minCol}px, 1fr))`;
 
   useEffect(() => {
@@ -229,18 +231,18 @@ function TimeGrid({ days, onPickDay }: { days: string[]; onPickDay: (d: string) 
 
   return (
     <div className="card" style={{ overflow: 'hidden' }}>
-      <div className="cal-grid-wrap" ref={wrapRef}>
-        <div style={{ minWidth: days.length > 1 ? timeColW + days.length * minCol : undefined }}>
+      <div className={`cal-grid-wrap ${compact ? 'cal-compact' : ''}`} ref={wrapRef}>
+        <div style={{ minWidth: days.length > 1 && minCol ? timeColW + days.length * minCol : undefined }}>
           <div className="cal-head" style={{ gridTemplateColumns: gridCols, display: mobile && days.length === 1 ? 'none' : undefined }}>
             <div />
             {days.map((d) => {
               const w = workingWindow(s, d);
               return (
-                <div key={d} className={`day-h ${d === today() ? 'today' : ''}`} onClick={() => days.length > 1 && onPickDay(d)}>
+                <div key={d} className={`day-h ${d === today() ? 'today' : ''} ${isoWeekday(d) >= 6 ? 'weekend' : ''}`} onClick={() => days.length > 1 && onPickDay(d)}>
                   {WEEKDAYS_SHORT[isoWeekday(d) - 1]}
                   <span className="dnum">{Number(d.slice(8))}</span>
-                  {!w && <div className="xs faint">kapalı</div>}
-                  {w?.special && <div className="xs" style={{ color: 'var(--accent)' }}>özel gün</div>}
+                  {!w && <div className="xs faint day-note">kapalı</div>}
+                  {w?.special && <div className="xs day-note" style={{ color: 'var(--accent)' }}>özel gün</div>}
                 </div>
               );
             })}
@@ -257,7 +259,7 @@ function TimeGrid({ days, onPickDay }: { days: string[]; onPickDay: (d: string) 
               const exts = externalBlocksOnDay(db, d);
               const isToday = d === today();
               return (
-                <div key={d} className={`cal-col ${isToday ? 'is-today' : ''}`}
+                <div key={d} className={`cal-col ${isToday ? 'is-today' : ''} ${isoWeekday(d) >= 6 ? 'weekend' : ''}`}
                   onPointerMove={(e) => { if (!drag && e.pointerType === 'mouse' && e.target === e.currentTarget) setHover({ day: di, min: Math.floor(posToMin(e.clientY) / 15) * 15 }); else if (!drag && e.target !== e.currentTarget) setHover(null); }}
                   onClick={(e) => {
                     if (e.target !== e.currentTarget) return;
@@ -308,9 +310,9 @@ function TimeGrid({ days, onPickDay }: { days: string[]; onPickDay: (d: string) 
                         style={{
                           ['--ev' as string]: apptColor(a),
                           top: y(st) + 1,
-                          height: Math.max(22, (en - st) * PX - 2),
-                          left: `calc(${(l.col / l.cols) * 100}% + 3px)`,
-                          width: `calc(${100 / l.cols}% - 6px)`,
+                          height: Math.max(compact ? 26 : 22, (en - st) * PX - 2),
+                          left: `calc(${(l.col / l.cols) * 100}% + ${compact ? 1 : 3}px)`,
+                          width: `calc(${100 / l.cols}% - ${compact ? 2 : 6}px)`,
                           right: 'auto',
                           transform: isDrag ? `translate(${drag!.dx}px, ${drag!.dy}px)` : undefined,
                         }}
@@ -338,9 +340,9 @@ function TimeGrid({ days, onPickDay }: { days: string[]; onPickDay: (d: string) 
                         title={`${c?.name ?? ''} · ${timeOf(a.start)}–${timeOf(a.end)} · ${SESSION_STATUS_LABEL[a.status]}`}
                         data-testid="cal-event"
                       >
-                        <div className="ev-t">{timeOf(a.start)}{en - st >= 40 ? `–${timeOf(a.end)}` : ''}</div>
-                        <div className="ev-n">{c?.name ?? 'Danışan'}</div>
-                        {en - st >= 55 && <div className="ev-t" style={{ fontWeight: 500 }}>{a.billing === 'package' ? 'Paket' : a.sessionType}</div>}
+                        <div className="ev-t">{timeOf(a.start)}{!compact && en - st >= 40 ? `–${timeOf(a.end)}` : ''}</div>
+                        <div className="ev-n">{compact ? (c?.name ?? 'Danışan').split(/\s+/)[0] : c?.name ?? 'Danışan'}</div>
+                        {!compact && en - st >= 55 && <div className="ev-t" style={{ fontWeight: 500 }}>{a.billing === 'package' ? 'Paket' : a.sessionType}</div>}
                       </div>
                     );
                   })}

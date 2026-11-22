@@ -51,12 +51,11 @@ with sync_playwright() as p:
         w = page.evaluate("document.documentElement.scrollWidth")
         if w > 392: overflow[r] = w
     ok("mobilde yatay taşma yok", not overflow, str(overflow))
-    # koyu tema
+    # Tema: uygulama her zaman açık temada (koyu tema seçeneği kaldırıldı)
     page.goto(BASE + "#/ayarlar?b=gorunum"); page.wait_for_timeout(600)
-    page.get_by_role("button", name="Koyu", exact=True).click(); page.wait_for_timeout(400)
+    ok("koyu tema seçeneği yok, açık tema", page.get_by_role("button", name="Koyu", exact=True).count() == 0 and page.evaluate("document.documentElement.dataset.theme") == "light")
     page.goto(BASE + "#/"); page.wait_for_timeout(500)
-    ok("koyu tema uygulandı", page.evaluate("document.documentElement.dataset.theme") == "dark")
-    shot(page, "m14-dark-dashboard")
+    shot(page, "m14-light-dashboard")
     page.goto(BASE + "#/takvim"); page.wait_for_timeout(600)
     shot(page, "m15-dark-calendar")
     # demodan çık: gerçek veritabanı ayrı kalmalı

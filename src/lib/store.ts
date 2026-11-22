@@ -10,7 +10,7 @@ import {
   copyDatabaseIfNeeded, getAllRecords, getMeta, isQuotaError, replaceAllRecords, setMeta, setMetaAtomic, writeRecords,
   setDatabaseName, getDatabaseName, type StoredRecord, type VaultMeta,
 } from './idb';
-import { defaultSettings, legacyDefaultWeek, NOTE_TEMPLATE_DEFAULTS, sameWeek, standardWeek, TEMPLATE_DEFAULTS, WORKING_HOURS_VERSION } from './defaults';
+import { defaultSettings, LEGACY_STATUS_COLORS, STATUS_COLORS, legacyDefaultWeek, NOTE_TEMPLATE_DEFAULTS, sameWeek, standardWeek, TEMPLATE_DEFAULTS, WORKING_HOURS_VERSION } from './defaults';
 import { nowISO } from './dates';
 import { toast } from './toast';
 import { TABLES, type ActivityEntry, type DB, type Settings, type TableName } from './types';
@@ -508,6 +508,8 @@ async function migrate(db: DB, vault: VaultMeta): Promise<DB> {
     if (sameWeek(merged.workingHours, legacyDefaultWeek())) merged.workingHours = standardWeek();
     merged.workingHoursVersion = WORKING_HOURS_VERSION;
   }
+  // Durum renkleri: hiç değiştirilmemiş eski varsayılan renkler yeni pastel paletle değiştirilir; özel seçimlere dokunulmaz.
+  if (existing && JSON.stringify(merged.statusColors) === JSON.stringify(LEGACY_STATUS_COLORS)) merged.statusColors = { ...STATUS_COLORS };
   if (JSON.stringify(merged) !== JSON.stringify(existing)) {
     db.settings.set('main', merged);
     toWrite.push({ t: 'settings', v: merged });

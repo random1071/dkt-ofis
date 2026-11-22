@@ -33,6 +33,17 @@ export function sameWeek(a: Record<string, DayHours> | undefined, b: Record<stri
   return JSON.stringify(norm(a)) === JSON.stringify(norm(b));
 }
 
+/** Randevu durum renkleri: birbirinden kolay ayırt edilen, uygulamanın gül/pastel diline uyan tonlar */
+export const STATUS_COLORS = {
+  planned: '#c06c84', // gül
+  completed: '#5f9e7f', // adaçayı yeşili
+  cancelled: '#d9776a', // mercan
+  noshow: '#d19a3d', // bal
+  postponed: '#8a78c4', // lavanta
+};
+/** Önceki sürümün varsayılan durum renkleri (yalnızca hiç değiştirilmemiş kurulumları güncellemek için) */
+export const LEGACY_STATUS_COLORS = { planned: '#b27d80', completed: '#7c9583', cancelled: '#b36a5d', noshow: '#b98f52', postponed: '#8f7b93' };
+
 export function defaultSettings(now: string): Settings {
   return {
     id: 'main',
@@ -64,13 +75,7 @@ export function defaultSettings(now: string): Settings {
     cancellationPolicy: { chargeByDefault: false, freeHours: 24, percent: 100, packageCreditByDefault: 'return' },
     noShowPolicy: { charge: true, percent: 100, usePackageCredit: true },
     packagePolicy: { defaultValidityDays: 60, warnDaysBefore: 7, warnRemaining: 2 },
-    statusColors: {
-      planned: '#b27d80',
-      completed: '#7c9583',
-      cancelled: '#b36a5d',
-      noshow: '#b98f52',
-      postponed: '#8f7b93',
-    },
+    statusColors: { ...STATUS_COLORS },
     theme: 'system',
     language: 'tr',
     autoLockMinutes: 10,

@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import React, { createContext, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import { createPortal } from 'react-dom';
 import { AlertTriangle, CheckCircle2, CircleHelp, Info, X, XCircle, Search } from 'lucide-react';
 import { dismissToast, subscribeToasts, type ToastMsg } from '../lib/toast';
 import { fmtMoney, initials, normalizeSearch } from '../lib/format';
@@ -392,29 +393,75 @@ export function Segmented<T extends string>({ options, value, onChange, classNam
   );
 }
 
+/**
+ * Açılır menü. Menü sayfanın en üst katmanına (body) çizilir ve tetikleyici düğmenin konumuna göre
+ * ekran içinde kalacak şekilde yerleştirilir: sağa/sola taşmaz, aşağıda yer yoksa yukarı açılır,
+ * kaydırma ve ekran döndürmede yeniden konumlanır. (Önceki sürümde menü düğmeye göre sabit
+ * hizalandığı için dar ekranda ekranın dışına kayıyordu.)
+ */
 export function Dropdown({ trigger, children, align = 'right' }: { trigger: (open: () => void) => React.ReactNode; children: (close: () => void) => React.ReactNode; align?: 'left' | 'right' }) {
   const [open, setOpen] = useState(false);
+  const [pos, setPos] = useState<{ left: number; top: number; maxH: number } | null>(null);
   const ref = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!open) return;
-    const h = (e: MouseEvent) => {
-      if (!ref.current?.contains(e.target as Node)) setOpen(false);
+    const h = (e: MouseEvent | TouchEvent) => {
+      const t = e.target as Node;
+      if (!ref.current?.contains(t) && !menuRef.current?.contains(t)) setOpen(false);
     };
     const k = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false);
-    setTimeout(() => document.addEventListener('mousedown', h), 0);
+    const id = setTimeout(() => { document.addEventListener('mousedown', h); document.addEventListener('touchstart', h, { passive: true }); }, 0);
     window.addEventListener('keydown', k);
     return () => {
+      clearTimeout(id);
       document.removeEventListener('mousedown', h);
+      document.removeEventListener('touchstart', h);
       window.removeEventListener('keydown', k);
     };
   }, [open]);
+  useLayoutEffect(() => {
+    if (!open) { setPos(null); return; }
+    const place = () => {
+      const t = ref.current?.getBoundingClientRect();
+      const m = menuRef.current;
+      if (!t || !m) return;
+      const pad = 8;
+      const vw = document.documentElement.clientWidth;
+      const vh = window.innerHeight;
+      const mw = Math.min(m.offsetWidth, vw - pad * 2);
+      const mh = m.scrollHeight;
+      let left = align === 'right' ? t.right - mw : t.left;
+      left = Math.max(pad, Math.min(left, vw - mw - pad));
+      const below = vh - t.bottom - pad - 6;
+      const above = t.top - pad - 6;
+      const up = mh > below && above > below;
+      const maxH = Math.max(120, up ? above : below);
+      const top = up ? Math.max(pad, t.top - 6 - Math.min(mh, maxH)) : t.bottom + 6;
+      setPos({ left, top, maxH });
+    };
+    place();
+    window.addEventListener('resize', place);
+    window.addEventListener('scroll', place, true);
+    return () => {
+      window.removeEventListener('resize', place);
+      window.removeEventListener('scroll', place, true);
+    };
+  }, [open, align]);
   return (
     <div ref={ref} style={{ position: 'relative', display: 'inline-block' }}>
       {trigger(() => setOpen((o) => !o))}
-      {open && (
-        <div className="menu" style={{ [align]: 0, top: 'calc(100% + 6px)' }} onClick={(e) => e.stopPropagation()}>
+      {open && createPortal(
+        <div
+          ref={menuRef}
+          className="menu menu-floating"
+          role="menu"
+          style={{ left: pos?.left ?? 0, top: pos?.top ?? 0, maxHeight: pos?.maxH, visibility: pos ? 'visible' : 'hidden' }}
+          onClick={(e) => e.stopPropagation()}
+        >
           {children(() => setOpen(false))}
-        </div>
+        </div>,
+        document.body,
       )}
     </div>
   );

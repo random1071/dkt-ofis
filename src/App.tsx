@@ -22,10 +22,14 @@ import { PrintReportPage } from './pages/PrintReport';
 import { BrandMark } from './components/Brand';
 import { startTour } from './components/Tour';
 
-function applyTheme(theme: string) {
-  const dark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-  document.documentElement.dataset.theme = dark ? 'dark' : 'light';
-  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', dark ? '#1b1718' : '#f9f5f1');
+/**
+ * DKT Ofis her zaman açık temada görünür: cihazın sistem teması koyu olsa bile koyu tema uygulanmaz.
+ * (Kayıtlı eski "tema" ayarı veri olarak korunur ama görünümü etkilemez.)
+ */
+function applyTheme(_theme?: string) {
+  document.documentElement.dataset.theme = 'light';
+  document.documentElement.style.colorScheme = 'light';
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', '#f9f5f1');
 }
 
 function ThemeSync() {
@@ -36,11 +40,6 @@ function ThemeSync() {
       localStorage.setItem('dkt-theme', s.theme);
       localStorage.setItem('dkt-name', s.therapistName.trim().split(/\s+/)[0] ?? '');
     } catch { /* yok say */ }
-    if (s.theme !== 'system') return;
-    const mq = window.matchMedia('(prefers-color-scheme: dark)');
-    const h = () => applyTheme('system');
-    mq.addEventListener('change', h);
-    return () => mq.removeEventListener('change', h);
   }, [s.theme, s.therapistName]);
   return null;
 }
