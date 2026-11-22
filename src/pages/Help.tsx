@@ -150,6 +150,11 @@ export function HelpPage() {
             <div className="grow"><div className="strong">Başlangıç rehberi</div><div className="small muted">Ekran üzerinde işaretleyerek ana bölümleri 2 dakikada gösterir.</div></div>
             <button className="btn primary" onClick={() => startTour()} data-testid="help-start-tour"><PlayCircle /> Rehberi başlat</button>
           </div>
+          <div className="card card-pad row wrap gap-4" data-testid="guide-pdf-card">
+            <BookOpen style={{ width: 22, height: 22, color: 'var(--accent)' }} />
+            <div className="grow" style={{ minWidth: 200 }}><div className="strong">Kısa kullanım kılavuzu (PDF)</div><div className="small muted">Tüm özellikler 2 sayfada, ekran görüntüleriyle. Yazdırabilir veya paylaşabilirsiniz. İnternet bağlantısı gerekir.</div></div>
+            <a className="btn" href="./kullanim-kilavuzu.pdf" target="_blank" rel="noopener" data-testid="guide-pdf-link"><Download /> Kılavuzu aç</a>
+          </div>
           {installable && (
             <div className="card card-pad row wrap gap-4">
               <Download style={{ width: 22, height: 22, color: 'var(--accent)' }} />

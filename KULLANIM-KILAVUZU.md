@@ -1,241 +1,201 @@
-# DKT Ofis — Kullanım Kılavuzu
+# 🩺 DKT Ofis · Kullanım Kılavuzu
 
-Bu kılavuz uygulamayı kullanacak kişi için hazırlandı. Her bölümde üç soru cevaplanır: **Ne işe yarar? Nereden açılır? Nasıl kullanılır?**
+> Danışan, randevu, seans notu, ödeme ve rapor işleriniz tek yerde.
+> Kayıtlar **yalnızca sizin cihazınızda, şifreli** durur.
+>
+> 🌐 **Adres:** https://dkt-ofis.terapiofisi.workers.dev · 📄 Yazdırılabilir renkli sürüm: [`KULLANIM-KILAVUZU.pdf`](KULLANIM-KILAVUZU.pdf)
 
-Uygulama adresi: **https://dkt-ofis.terapiofisi.workers.dev**
-
-Uygulama içinde de aynı bilgiler **Menü → Yardım Merkezi**'nde bulunur.
+| ➕ Bir şey eklemek | 🔎 Aramak | ❓ Takıldığınızda |
+|---|---|---|
+| Altta / üstte **+ Yeni** | Üstteki **Ara** (bilgisayarda Ctrl + K) | **Menü → Yardım Merkezi** |
 
 ---
 
-## 1. DKT Ofis nedir, ne işe yarar?
+## 1️⃣ Başlarken
 
-DKT Ofis, dil ve konuşma terapisti için ofis yönetim uygulamasıdır. Şunları tek yerde tutar:
-- danışanlar, randevular ve takvim,
-- seans notları, hedefler (BEP), ev çalışmaları,
-- ödemeler, paketler, gelir-gider,
-- raporlar ve yedekler.
+<img src="docs/kilavuz/01-giris.jpg" width="150" align="right" alt="İlk açılış ekranı">
 
-Kayıtlar **yalnızca kullandığınız cihazda**, şifreli olarak saklanır. İnternet olmadan da çalışır. Ücretsizdir.
+### 🚀 İlk açılış
+1. Adresi açın → **Başlayalım** → adınız → **Devam**.
+2. Şifre ekranında seçin: **Şifreyi oluştur** (önerilen) ya da **Şifresiz devam et**.
+3. Şifre seçtiyseniz **kurtarma kodunu** kâğıda yazıp saklayın.
 
-## 2. Uygulamaya nasıl giriş yapılır?
+> [!TIP]
+> Şifreyi sonradan **Ayarlar → Güvenlik**'ten açıp kapatabilirsiniz. Kayıtlarınız silinmez.
 
-1. Adresi açın: https://dkt-ofis.terapiofisi.workers.dev
-2. İlk açılışta **Başlayalım** → adınız ve ofis adı → **Devam**.
-3. Şifre ekranında iki seçeneğiniz var:
-   - **Şifreyi oluştur** (önerilen): her açılışta şifre sorulur. Ardından gösterilen **kurtarma kodunu** kâğıda yazıp saklayın.
-   - **Şifresiz devam et**: şifre sorulmaz. Kayıtlar yine şifreli saklanır, ama telefonunuz açıkken eline alan herkes görebilir. Bu seçeneği yalnızca telefonun kendi ekran kilidi açıksa kullanın.
-4. Şifreyi sonradan **Ayarlar → Güvenlik** bölümünden açıp kapatabilirsiniz. Kayıtlarınız silinmez.
+### 📱 Telefona ve bilgisayara ekleme
 
-## 3. iPhone'a nasıl kurulur?
-
-1. Adresi **Safari**'de açın.
-2. Alttaki **Paylaş** simgesine dokunun.
-3. **Ana Ekrana Ekle**'yi seçin.
-4. **Web Uygulaması olarak aç** anahtarı varsa açık olsun, sonra **Ekle**'ye dokunun.
-5. Uygulamayı hep ana ekrandaki **DKT Ofis** simgesinden açın. Doğru kurulduysa Safari'nin adres çubuğu görünmez.
-6. İlk kurulumu da bu simgeden yapın. Safari sekmesindeki kayıtlar ile simgeden açılan uygulamanın kayıtları ayrıdır.
-
-## 4. Android'e nasıl kurulur?
-
-1. Adresi **Chrome**'da açın.
-2. Sağ üstteki **⋮** menüsünden **Uygulamayı yükle** (veya **Ana ekrana ekle**) seçin.
-3. Ana ekrandaki **DKT Ofis** simgesinden açın.
-
-## 5. Bilgisayarda nasıl kullanılır?
-
-- **Windows (Chrome veya Edge):** Adresi açın. Adres çubuğundaki **yükle** simgesine tıklayın, sonra **Yükle**'yi seçin. Uygulama Başlat menüsüne eklenir.
-- **Mac (Chrome):** Aynı yükle simgesini kullanın. **Mac (Safari):** Menüden **Dosya → Dock'a Ekle** seçin.
-- Bilgisayardaki kayıtlar telefondakinden ayrıdır. Aktarma yöntemi için 21. bölüme bakın.
-
-## 6. Danışan nasıl eklenir ve düzenlenir?
-
-- **Nereden:** **Danışanlar → Yeni danışan**, ya da üstteki **+ Yeni → Danışan**.
-- **Nasıl:**
-  1. Ad soyad zorunludur. Telefon numarası, WhatsApp mesajlarının hazırlanacağı numaradır.
-  2. Seans ücretini ve ödeme düzenini (seans başı / paket) seçip **Kaydet**'e basın.
-- **Düzenlemek:** Danışan dosyasında **⋯ → Bilgileri düzenle**.
-- **Artık gelmeyen danışan:** **⋯ → Arşivle**. Kayıtlar silinmez.
-- **Kişisel bilgileri kalıcı silmek (KVKK):** Önce danışanı arşivleyin, sonra **⋯ → Kişisel bilgileri sil (KVKK)**. Bu işlem danışanın seans notlarını, hedeflerini, ev çalışmalarını, formlarını ve belgelerini de kalıcı olarak siler.
-
-## 7. Danışan dosyası nasıl kullanılır?
-
-Danışanın adına dokununca dosyası açılır. Üstteki sekmeler:
-
-| Sekme | Ne gösterir |
+| Cihaz | Nasıl? |
 |---|---|
-| Genel Bakış | Son ve sonraki seans, açık ödemeler, aylık/yıllık özet |
-| Randevular / Seans Geçmişi | Gelecek ve geçmiş seanslar |
-| Seans Notları | Tüm seans notları, arama, silinenler |
-| Hedefler (BEP) | Amaçlar, hedefler, ölçümler, grafik |
-| Ev Çalışmaları | Verilen ödevler ve durumları |
-| Formlar | Doldurduğunuz değerlendirme formları |
-| Belgeler | Eklenen fotoğraf ve belgeler |
-| Zaman Çizelgesi | Seans, not, ölçüm, ödev ve ödemeler tarih sırasıyla |
-| Ödemeler / Paketler | Ödeme ve paket geçmişi |
-| Genel Notlar / İşlem Geçmişi | Diğer notlar ve yapılan işlemler |
+| **iPhone** | **Safari** → **Paylaş** → **Ana Ekrana Ekle** → *Web Uygulaması olarak aç* açık → **Ekle** |
+| **Android** | **Chrome** → **⋮** → **Uygulamayı yükle** |
+| **Bilgisayar** | Chrome / Edge: adres çubuğundaki **yükle** simgesi · Mac Safari: **Dosya → Dock'a Ekle** |
 
-Sağ üstteki **⋯** menüsünde ayrıca şunlar var: **Seans notu yaz**, **Danışan dosyası (PDF)**, **Danışan verilerini dışa aktar**.
+> [!NOTE]
+> Uygulamayı hep ana ekrandaki **DKT Ofis** simgesinden açın. Telefondaki ve bilgisayardaki kayıtlar ayrıdır; aktarmak için 💾 Yedek bölümüne bakın.
 
-## 8. Randevu nasıl oluşturulur, değiştirilir ve iptal edilir?
+<br clear="right">
 
-- **Oluşturmak:** **Takvim**'de boş saate dokunun ya da **+ Yeni → Randevu**. Danışanı ve saati seçip kaydedin. Tekrarlayan randevu için **Tekrar** bölümünü kullanın.
-- **Değiştirmek:** Randevuya dokunun, sonra **Düzenle** veya **Taşı / Ertele**. Bilgisayarda takvimde sürükleyerek de taşıyabilirsiniz.
-- **İptal:** Randevuya dokunun, **İptal et**'e basın ve nedeni yazın.
-- **Gelmedi:** Randevuya dokunun, **Gelmedi**'ye basın.
+---
 
-## 9. Takvim ve bekleme listesi nasıl kullanılır?
+## 2️⃣ Günlük iş ve ödemeler
 
-- **Takvim:** **Gün / Hafta / Ay / Ajanda** görünümleri vardır.
-- **Çalışma saatleri:** Haftanın 7 günü **07.00–21.00** olarak ayarlıdır. Değiştirmek için **Ayarlar → Çalışma saatleri ve müsaitlik** bölümünü açın:
-  - Her günün başlangıç ve bitiş saatini ayrı ayrı değiştirebilir, günün yanındaki kutuyu kaldırarak o günü kapatabilirsiniz.
-  - **Tüm açık günlere uygula** düğmesi bir günün saatini diğer açık günlere kopyalar.
-  - **Haftanın 7 günü 07:00–21:00** düğmesi standart düzeni geri getirir.
-  - Değişikliklerden sonra **Çalışma saatlerini kaydet**'e basın.
-- **Saatler neyi etkiler:** Boş saat önerileri, çakışma uyarıları ve tekrarlayan randevular bu saatlere göre çalışır. Çalışma saati dışındaki bir randevu engellenmez, yalnızca uyarı gösterilir. Kayıtlı randevular saat değişikliğinden etkilenmez.
-- **Kapalı zaman:** Tatil veya kişisel izinler için **Ayarlar → Zaman kapat**'ı kullanın.
-- **Bekleme listesi:** **Menü → Bekleme Listesi → Yeni**. Uygun gün ve saati yazın. Takvimde boş saat açılınca uygulama size uygun kişileri gösterir.
+### 👤 Danışanlar
+📍 **Danışanlar → Yeni danışan**
+- Ad soyad yazmanız yeterli. Telefon numarası WhatsApp mesajları için kullanılır.
+- **Düzenlemek:** danışan dosyası → **⋯** → **Bilgileri düzenle**
+- **Artık gelmeyen danışan:** **⋯** → **Arşivle**. Hiçbir kayıt silinmez.
 
-## 10. Seans nasıl tamamlanır?
+<img src="docs/kilavuz/04-danisan-dosyasi.jpg" width="150" align="right" alt="Danışan dosyası">
 
-1. **Bugün** ekranında randevudaki **Tamamlandı**'ya basın.
-2. Ödeme alındıysa aynı pencerede işaretleyin.
-3. Ayrıntılı not yazmak için **Kaydettikten sonra seans notu yaz** kutusunu işaretleyin.
+### 🗂️ Danışan dosyası
+Danışanın adına dokunun. Sekmeler: **Genel Bakış · Randevular · Seans Notları · Hedefler (BEP) · Ev Çalışmaları · Formlar · Belgeler · Zaman Çizelgesi · Ödemeler · Paketler**
 
-## 11. Seans notu nasıl yazılır, şablonlar nasıl kullanılır?
+> [!TIP]
+> **Zaman Çizelgesi** seansları, notları, ölçümleri, ödevleri ve ödemeleri tarih sırasıyla tek listede gösterir.
 
-- **Nereden:**
-  - **Bugün** ekranındaki **Seans notu** düğmesi,
-  - randevu ayrıntısındaki **Seans notu yaz**,
-  - danışan dosyasında **Seans Notları → Yeni seans notu**.
-- **Şablon seçimi:** **Serbest not**, **SOAP** (Subjektif, Objektif, Değerlendirme, Plan) veya **Kısa seans notu**. Uygulama, danışanda en son kullandığınız şablonu seçili getirir.
-- **Kendi şablonunuz:** **Menü → Not ve Form Şablonları → Yeni not şablonu**. Alan adlarını siz yazarsınız.
-- **Taslak:** Yazdıkça not birkaç saniyede bir otomatik kaydedilir. Pencereyi kapatıp sonra devam edebilirsiniz.
-- **Bitirmek:** **Notu tamamla**'ya basın.
-- **Düzenlemek:** Notun üstüne dokunun. Her düzenlemede önceki hâl **Sürümler**'de saklanır ve **Bu sürüme dön** ile geri dönülebilir.
-- **Silmek ve geri almak:** **Sil** ile not **Silinenler**'e taşınır. **Seans Notları → Silinenler → Geri al** ile geri gelir. **Kalıcı sil** geri alınamaz.
+<br clear="right">
 
-## 12. Konuşarak not yazma nasıl kullanılır?
+<img src="docs/kilavuz/03-takvim.jpg" width="150" align="right" alt="Takvim gün görünümü">
 
-1. Seans notu penceresinde **Konuşarak yaz**'a dokunun ve konuşun. Metin imlecin olduğu yere eklenir; yazdıklarınız silinmez.
-2. Noktalama için "virgül", "nokta", "soru işareti" veya "yeni satır" deyin.
+### 📅 Takvim ve randevu
+📍 **Takvim** · **+ Yeni → Randevu**
+- **Oluşturmak:** Boş bir saate dokunun, danışanı ve saati seçin. Tekrarlayan randevu için **Tekrar** bölümünü kullanın.
+- **Değiştirmek:** Randevuya dokunun → **Düzenle** ya da **Taşı / Ertele**.
+- **İptal / gelmedi:** **İptal et** · **Gelmedi**
+- **Görünümler:** **Gün · Hafta · Ay · Ajanda**
+
+<br clear="right">
+
+### 🕖 Çalışma saatleri
+📍 **Ayarlar → Çalışma saatleri ve müsaitlik**
+
+Haftanın **7 günü 07.00–21.00** açıktır. Boş saat önerileri, çakışma uyarıları ve tekrarlayan randevular bu saatlere göre çalışır.
+- Her günün saatini ayrı ayrı değiştirebilirsiniz. Günün yanındaki kutuyu kaldırırsanız o gün kapalı olur.
+- **Tüm açık günlere uygula** bir günün saatini diğer açık günlere kopyalar. **Haftanın 7 günü 07:00–21:00** standart düzeni geri getirir. Bitirince **Çalışma saatlerini kaydet**'e basın.
+
+> [!NOTE]
+> Çalışma saati dışındaki bir randevu engellenmez, yalnızca uyarı çıkar. Tatil veya izin için **Zaman kapat**'ı kullanın.
+
+### ⏳ Bekleme listesi ve boş saat bulma
+📍 **Menü → Bekleme Listesi**
+- Bekleyen kişiyi, uygun olduğu gün ve saati yazın.
+- Takvimde boş saat açılınca **Genel Bakış**'ta uygun kişiler önerilir → **Eşleştir**.
+- Randevu formu da **önerilen boş saatleri** gösterir; birine dokunmanız yeterli.
+
+### 💳 Ödeme, borç ve paket
+- **Ödeme almak:** **+ Yeni → Ödeme**. Kısmi ödemede alınan tutarı yazmanız yeterli.
+- **Borçlar:** **Ödemeler → Açık alacaklar** sekmesi. Danışanın Genel Bakış bölümünde de görünür.
+- **Paket satmak:** **Menü → Paketler → Yeni paket**. Pakete bağlı her seans tamamlandığında paketten 1 seans düşer.
+
+### 📊 Gelir, gider ve raporlar
+- **Gider eklemek:** **+ Yeni → Gider**. Her ay tekrarlayan giderler için **Gelir-Gider → Düzenli giderler**.
+- **Raporlar:** Tahsilat, gider, katılım oranı ve **iptallerden kaybedilen gelir**.
+- **Hızlı özet:** **Genel Bakış**'taki **Bu hafta / Bu ay** kartı.
+
+---
+
+## 3️⃣ Seans notu, hedef ve ödev
+
+<img src="docs/kilavuz/05-seans-notu.jpg" width="150" align="right" alt="Seans notu penceresi">
+
+### 📝 Seans tamamlama ve seans notu
+📍 **Bugün → Seans notu** · **Danışan → Seans Notları**
+1. Seans bitince **Bugün** ekranında **Tamamlandı**'ya basın ve ödeme alındıysa işaretleyin. Not yazmak için **Kaydettikten sonra seans notu yaz** kutusunu işaretleyin.
+2. Şablon seçin: **Serbest not · SOAP · Kısa seans notu**. Kendi şablonunuzu **Menü → Not ve Form Şablonları**'nda hazırlayabilirsiniz.
+3. Siz yazdıkça not **otomatik taslak** olarak kaydedilir. Bitince **Notu tamamla**'ya basın.
+4. Eski hâller **Sürümler**'de saklanır. Silinen notlar **Silinenler**'den geri alınır.
+
+<br clear="right">
+
+### 🎙️ Konuşarak not yazma
+1. Seans notunda **Konuşarak yaz**'a basın ve konuşun. Söyledikleriniz imlecin olduğu yere eklenir.
+2. Noktalama için “virgül”, “nokta”, “soru işareti” ya da “yeni satır” deyin.
 3. Bitince **Dinlemeyi durdur**'a basın. Metni okuyup düzeltin, sonra kaydedin.
 
-Gizlilikle ilgili bilmeniz gerekenler:
-- Yanında **"Ses cihazda işlenir"** yazıyorsa ses telefondan çıkmaz.
-- Bu yazı yoksa ses, metne çevrilmek için Apple, Google veya Microsoft'a gidebilir. İlk kullanımda bu konuda size sorulur. Danışan adını ve tanısını sesli söylemeyin.
-- Uygulama ses kaydı saklamaz.
-- Düğme yoksa telefon klavyesindeki **mikrofon** (dikte) tuşunu kullanabilirsiniz.
+> [!WARNING]
+> Yanında **“Ses cihazda işlenir”** yazmıyorsa ses, metne çevrilmek için Apple, Google veya Microsoft'a gidebilir; ilk kullanımda size sorulur. Danışan adını ve tanısını sesli söylemeyin. Uygulama ses kaydı saklamaz.
 
-## 13. BEP ve hedef takibi nasıl yapılır?
+<img src="docs/kilavuz/06-hedefler.jpg" width="150" align="right" alt="Hedef gelişim grafiği">
 
-1. Danışan dosyasında **Hedefler (BEP) → Uzun vadeli amaç** ekleyin.
-2. Amacın altında **Bu amaca hedef ekle** ile kısa vadeli hedefi ve ölçütünü yazın (ör. "10 denemede 8").
-3. Ölçüm girmek için iki yol var:
-   - hedefteki **Ölçüm** düğmesi,
-   - seans notundaki **Bu seansta çalışılan hedefler** bölümü.
+### 🎯 BEP ve gelişim takibi
+📍 **Danışan → Hedefler (BEP)**
+1. **Uzun vadeli amaç** ekleyin. Altına **Bu amaca hedef ekle** ile kısa vadeli hedefi ve ölçütünü yazın.
+2. **Ölçüm**'e basıp doğru ve toplam deneme sayısını girin; yüzde kendiliğinden hesaplanır.
+3. **Gelişim** grafiği ve tüm ölçümleri gösterir. Hedefin durumunu **devam ediyor**, **beklemede** veya **tamamlandı** olarak işaretleyin.
 
-   Doğru ve toplam deneme sayısını girince yüzde otomatik hesaplanır.
-4. **Gelişim** düğmesi tarih sırasıyla grafiği ve tüm ölçümleri gösterir.
-5. Hedefin durumunu **Devam ediyor**, **Beklemede** veya **Tamamlandı** olarak değiştirin.
+> [!TIP]
+> Ölçümü seans notunun içinden de girebilirsiniz.
 
-İçeriği tamamen siz girersiniz; uygulama hazır terapi önerisi sunmaz.
+<br clear="right">
 
-## 14. Ev çalışmaları nasıl takip edilir?
+### 🏠 Ev çalışmaları ve formlar
+📍 **Danışan → Ev Çalışmaları → Ev çalışması**
+- Başlığı, açıklamayı ve son tarihi yazın. İsterseniz ilgili hedefi seçin.
+- Sonraki seansta **Tamamlandı** veya **Tamamlanmadı** olarak işaretleyin. Süresi geçenler **Gecikti** olarak görünür. Eskileri görmek için **Tümü (geçmiş dahil)**'i seçin.
+- 📋 Kendi değerlendirme formlarınızı **Not ve Form Şablonları**'nda hazırlayın, danışan dosyasındaki **Formlar** sekmesinden doldurun.
 
-1. Danışan dosyasında **Ev Çalışmaları → Ev çalışması**'na basın.
-2. Başlığı, açıklamayı ve son tarihi yazın. İsterseniz ilgili hedefi seçin.
-3. Sonraki seansta **Tamamlandı** veya **Tamamlanmadı** olarak işaretleyin. Süresi geçenler **Gecikti** olarak görünür.
-4. Eski ödevleri görmek için **Tümü (geçmiş dahil)**'i seçin.
+---
 
-## 15. Ödemeler, paketler ve borç/alacak nasıl yönetilir?
+## 4️⃣ İletişim, hatırlatma, rapor ve yedek
 
-- **Ödeme almak:** **+ Yeni → Ödeme**, ya da danışan dosyasında **Ödeme**. Kısmi ödeme için alınan tutarı yazmanız yeterli.
-- **Paket satmak:** **Menü → Paketler → Yeni paket**. Pakete bağlı her seans tamamlandığında paketten 1 seans düşülür.
-- **Borç / alacak:** **Ödemeler → Açık** sekmesi. Danışan dosyasının **Genel Bakış** bölümünde de görünür.
+<img src="docs/kilavuz/08-whatsapp.jpg" width="150" align="right" alt="WhatsApp mesaj penceresi">
 
-## 16. Gelir-gider ve raporlar nasıl görüntülenir?
+### 💬 WhatsApp mesajı
+📍 **Randevu → Hatırlat** · **Danışan → Mesaj**
+1. Şablonu seçin ve metni gerekirse düzeltin.
+2. **WhatsApp'ta aç**'a basın. WhatsApp, mesaj yazılmış hâlde açılır.
+3. **Gönder tuşuna siz basarsınız.**
 
-- **Gider eklemek:** **+ Yeni → Gider**. Her ay tekrarlanan giderler için **Gelir-Gider** ekranında düzenli gider tanımlayın.
-- **Raporlar:** **Menü → Raporlar**. Dönem seçin; tahsilat, gider, katılım oranı ve **İptallerin finansal etkisi** (kaybedilen gelir) görünür.
-- **Hızlı özet:** **Genel Bakış**'taki **Bu hafta / Bu ay** kartı tamamlanan seansları, tahsilatı ve bekleyen işleri gösterir.
+> [!WARNING]
+> Uygulama hiçbir mesajı kendiliğinden göndermez. Mesaja tanı, sağlık bilgisi veya seans notu yazmayın.
 
-## 17. WhatsApp mesajları nasıl hazırlanır ve gönderilir?
+<br clear="right">
 
-1. Randevuda **Hatırlat** veya **Mesaj hazırla**'ya, danışan dosyasında **Mesaj**'a basın.
-2. Şablonu seçin, metni kontrol edin ve gerekirse düzeltin.
-3. **WhatsApp'ta aç**'a basın. WhatsApp mesaj yazılı hâlde açılır; **gönder tuşuna siz basarsınız**.
+### 🔔 Hatırlatma ve bildirim
 
-Uygulama hiçbir mesajı kendiliğinden göndermez. Şablonları **Menü → Mesaj Şablonları**'ndan düzenleyebilirsiniz. Mesajlara tanı, sağlık bilgisi veya seans notu yazmayın.
+| Kime? | Nasıl çalışır? |
+|---|---|
+| **Danışana** | Randevu formundaki **Danışana hatırlatma (WhatsApp)** ile ayarlanır. Zamanı gelenler **Genel Bakış**'ta listelenir; mesajı siz gönderirsiniz. |
+| **Size** | **Ayarlar → Bildirimler** bölümünde zamanı seçin (ör. 1 gün, 2 saat önce), sonra **Cihaz bildirimlerine izin ver**'e dokunun. |
 
-## 18. Randevu hatırlatmaları ve bildirimler nasıl çalışır?
+> [!NOTE]
+> Bildirimler **uygulama açıkken** gelir. Uygulama kapalıyken de hatırlatma istiyorsanız **Önümüzdeki 60 günü telefon takvimine aktar**'a basın; telefonun takvimi kendi alarmını verir. Randevu değişirse takvime yeniden aktarın.
 
-İki ayrı şey vardır:
+### 📄 PDF, CSV ve belgeler
 
-| | Ne yapar | Nereden |
-|---|---|---|
-| **Danışana hatırlatma (WhatsApp)** | Zamanı gelen randevular **Genel Bakış**'ta listelenir. **Mesaj** ile WhatsApp'ı açıp siz gönderirsiniz. | Randevu formunda **Danışana hatırlatma (WhatsApp)** |
-| **Size bildirim** | Yaklaşan randevu için sizin cihazınıza bildirim ve günlük özet gelir. | **Ayarlar → Bildirimler** |
-
-Size gelen bildirimleri açmak için:
-1. **Ayarlar → Bildirimler → Yaklaşan randevular için bildirim göster**'i açın.
-2. Zamanları seçin (ör. **1 gün önce**, **2 saat önce**).
-3. **Cihaz bildirimlerine izin ver**'e dokunun. iPhone'da bu yalnızca ana ekrana eklenmiş uygulamada çalışır.
-
-Bunları da bilin:
-- Bildirimler **uygulama açıkken** gelir. Uygulama kapalıyken hatırlatma istiyorsanız **Önümüzdeki 60 günü telefon takvimine aktar**'a basın; telefonun takvimi kendi alarmını verir. Tek bir randevu için randevu ayrıntısındaki **Telefon takvimine ekle**'yi kullanın.
-- Bildirimlerde ve takvimde varsayılan olarak danışan adı yazmaz.
-- Randevu ertelenirse veya iptal edilirse bildirimler buna göre değişir. Ancak takvime aktardığınız kayıt kendiliğinden güncellenmez; randevu değişince takvime yeniden aktarın.
-- Geçmiş bildirimler **Ayarlar → Bildirimler → Bildirim geçmişi**'nde görünür.
-
-## 19. PDF ve CSV dışa aktarma nasıl yapılır?
-
-| Rapor | Nereden |
+| İstediğiniz | Nereden? |
 |---|---|
 | Tek seans notu | Seans notu penceresinde **PDF** |
-| Tüm seans notları | Danışan dosyası → **Seans Notları → PDF** |
-| Hedef ve gelişim raporu | Danışan dosyası → **Hedefler (BEP) → PDF** |
-| Tam danışan dosyası | Danışan **⋯ → Danışan dosyası (PDF)** ya da **Zaman Çizelgesi → Danışan dosyası (PDF)** |
+| Tüm notlar / hedef raporu | Danışan → **Seans Notları** veya **Hedefler (BEP)** → **PDF** |
+| Tam danışan dosyası | Danışan → **⋯** → **Danışan dosyası (PDF)** |
 | Gelir-gider | **Raporlar → Gelir-gider PDF** |
-| CSV (Excel) | **Yedekleme → CSV olarak dışa aktar**, **Raporlar → CSV** |
-| Danışanın tüm verileri | Danışan **⋯ → Danışan verilerini dışa aktar** |
+| Excel'de açılan liste (CSV) | **Yedekleme → CSV olarak dışa aktar** |
+| Fotoğraf / belge eklemek | Danışan → **Belgeler → Dosya ekle** (en fazla 10 MB) |
 
-PDF oluşturmak için:
-1. Açılan rapor sayfasında isterseniz tarih aralığı seçin.
-2. **PDF olarak kaydet / yazdır**'a basın.
-3. Açılan pencerede **PDF olarak kaydet**'i seçin.
+PDF almak için açılan sayfada **PDF olarak kaydet / yazdır**'a basın ve yazdırma penceresinde **PDF olarak kaydet**'i seçin.
 
-PDF ve CSV dosyaları **şifresizdir**; güvenli saklayın ve paylaşmayın.
+> [!WARNING]
+> PDF ve CSV dosyaları şifresizdir. Güvenli bir yerde saklayın ve paylaşmayın.
 
-## 20. Belge ve fotoğraf ekleme nasıl yapılır?
+<img src="docs/kilavuz/09-yedekleme.jpg" width="150" align="right" alt="Yedekleme ekranı">
 
-1. Danışan dosyasında **Belgeler → Dosya ekle**'ye basın ve fotoğraf, PDF ya da belge seçin. Dosya başına en fazla 10 MB eklenebilir.
-2. Dosyalar cihazda şifreli saklanır. Fotoğraflar **Görüntüle** ile, diğer dosyalar **Aç / indir** ile açılır.
-3. Belgeler **yedek dosyasına dahildir**. Cihaz içi otomatik yedeklere ise dahil değildir; bu yüzden belge ekledikten sonra yedek dosyası alın.
-4. Cihaz depolaması dolmak üzereyse uygulama uyarır.
+### 💾 Yedek ve internetsiz kullanım
+📍 **Menü → Yedekleme**
+1. **Yedek dosyasını indir**'e basın (telefonda **Paylaş / Dosyalar'a kaydet**). Dosyayı iCloud, Google Drive veya USB belleğe kaydedin. **Haftada bir** yedek alın.
+2. **Geri yüklemek veya başka cihaza taşımak için:** Önce hedef cihazın kendi yedeğini alın. Ardından **Yedek dosyası seç** ile dosyayı seçin ve **Tamamen değiştir** ya da **Birleştir**'i seçin.
 
-## 21. Yedek nasıl alınır ve geri yüklenir?
+> [!TIP]
+> Uygulama bir kez açıldıktan sonra internet olmadan da çalışır. Yalnızca WhatsApp mesajı için internet gerekir.
 
-- **Yedek almak:** **Menü → Yedekleme → Yedek dosyasını indir** (telefonda **Paylaş / Dosyalar'a kaydet**). Şifresiz kullanımda yedek için ayrı bir şifre sorulur. Dosyayı iCloud Drive, Google Drive veya USB belleğe kaydedin.
-- **Ne sıklıkla:** En az haftada bir.
-- **Geri yüklemek:**
-  1. Geri yükleyeceğiniz cihazda önce o cihazın kendi yedeğini alın.
-  2. **Yedekleme → Yedek dosyası seç** ile dosyayı seçin ve yedeğin şifresini girin.
-  3. **Tamamen değiştir** cihazdaki kayıtların yerine yedeği koyar. **Birleştir** ise ikisini birleştirir.
-- **Telefon ile bilgisayar arasında aktarmak:** Otomatik eşitleme yoktur. Bir cihazda yedek alın, dosyayı diğer cihaza gönderin ve orada geri yükleyin. İki cihazda ayrı ayrı kayıt girerseniz kayıtlar kendiliğinden birleşmez.
+<br clear="right">
 
-## 22. İnternet olmadan nasıl kullanılır?
+### 🔒 Gizlilik ve güvenlik
+- Kayıtlar **yalnızca bu cihazda, şifreli** durur. Hiçbir sunucuya veya yapay zekâ servisine gönderilmez.
+- Uygulama kameraya, konuma ve rehbere erişmez. Mikrofonu yalnızca siz **Konuşarak yaz**'a bastığınızda kullanır.
+- Danışan bilgileri için **şifreli kullanımı** ve telefonun ekran kilidini öneririz. Şifre ve kurtarma kodu birlikte kaybolursa kayıtları yalnızca yedek dosyası kurtarabilir.
+- Gerçek danışan verisi girmeden önce KVKK ve meslek kuralları açısından bir avukat veya veri koruma danışmanından görüş alın.
 
-Uygulama internet varken bir kez açıldıktan sonra internetsiz de açılır; tüm kayıtlarla çalışabilirsiniz. İnternet şu durumlarda gerekir:
-- WhatsApp mesajı göndermek,
-- ilk kurulum,
-- konuşarak yazma (cihazda çalışmıyorsa).
+---
 
-## 23. Güvenlik, şifre ve veri gizliliği konusunda nelere dikkat edilmelidir?
-
-- **Şifreli kullanım** ve telefonun kendi ekran kilidi danışan bilgileri için önerilir.
-- Kurtarma kodunu güvenli bir yerde saklayın. Şifre ve kurtarma kodu birlikte kaybolursa kayıtlara kimse ulaşamaz; yalnızca yedek dosyası kurtarır.
-- Kayıtlar hiçbir sunucuya veya yapay zekâ servisine gönderilmez. Uygulama kamera, konum, rehber veya fotoğraflarınıza erişmez. Mikrofonu yalnızca siz **Konuşarak yaz**'a bastığınızda kullanır.
-- PDF, CSV ve danışan verisi dışa aktarımları şifresizdir.
-- Uygulama hukuki uyumu tek başına sağlamaz. Gerçek danışan verisi girmeden önce KVKK ve meslek kuralları açısından bir avukat veya veri koruma danışmanından görüş alın.
-- Düzenli yedek alın.
+<sub>Ekran görüntüleri hayali örnek verilerle alınmıştır. Daha ayrıntılı adımlar için uygulamada **Menü → Yardım Merkezi**'ne bakın.</sub>

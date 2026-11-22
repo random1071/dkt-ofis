@@ -39,6 +39,8 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,svg,png,woff2,ico,webmanifest}'],
         globIgnores: ['**/*cyrillic*', '**/*greek*', '**/*vietnamese*'],
         navigateFallback: 'index.html',
+        // PDF kılavuz gibi dosyalar uygulama sayfasına yönlendirilmesin
+        navigateFallbackDenylist: [/\.pdf$/],
         cleanupOutdatedCaches: true,
         maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
       },

@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>DKT Ofis Kullanım Kılavuzu</title>
+<style>
+  /* DKT Ofis renkleri (uygulamadaki tasarım dili) */
+  :root {
+    --bg: #f9f5f1; --surface: #fffdfb; --surface-2: #f4ede7; --border: #ece2da;
+    --text: #2f2729; --text-2: #6b5f62; --accent: #9d6966; --accent-strong: #865655; --accent-soft: #f5e8e5;
+    --ok: #5e7f68; --ok-soft: #e6efe7; --warn: #a67b3b; --warn-soft: #f6ecdc; --info: #5f7f99; --info-soft: #e5edf3;
+  }
+  @page { size: A4; margin: 10mm; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--text); font-family: 'Inter', -apple-system, 'Segoe UI', Roboto, Arial, sans-serif; font-size: 9.2pt; line-height: 1.32; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .page { width: 190mm; margin: 0 auto; }
+  header { display: flex; align-items: center; gap: 12px; background: var(--accent); color: #fffaf8; border-radius: 12px; padding: 12px 16px; }
+  .logo { width: 40px; height: 40px; border-radius: 10px; background: #fffaf8; color: var(--accent); display: grid; place-items: center; font-family: Georgia, serif; font-weight: 700; font-size: 12pt; letter-spacing: .5px; flex: none; }
+  header h1 { margin: 0; font-family: Georgia, 'Times New Roman', serif; font-weight: 600; font-size: 17pt; }
+  header p { margin: 2px 0 0; opacity: .92; font-size: 9pt; }
+  header .url { margin-left: auto; text-align: right; font-size: 8.4pt; flex: none; }
+  header .url b { white-space: nowrap; }
+  header .url b { display: block; font-size: 9.6pt; }
+  .strip { margin: 6px 0; text-align: center; }
+  .pill { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 6px 9px; font-size: 8.8pt; }
+  .pill b { color: var(--accent-strong); }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 11px; padding: 6px 8px; break-inside: avoid; }
+  .card h2 { margin: 0 0 2px; font-size: 10.2pt; color: var(--accent-strong); display: flex; align-items: center; gap: 6px; }
+  .card h2 .ic { font-size: 12pt; }
+  .where { display: inline-block; background: var(--accent-soft); color: var(--accent-strong); border-radius: 6px; padding: 1px 6px; font-size: 8.4pt; font-weight: 600; margin-bottom: 3px; }
+  .card p { margin: 2px 0; }
+  ol, ul { margin: 2px 0 0; padding-left: 16px; }
+  li { margin: 1px 0; }
+  .btn { display: inline-block; border: 1px solid var(--border); background: var(--surface-2); border-radius: 5px; padding: 0 4px; font-weight: 600; font-size: 8.6pt; white-space: nowrap; }
+  .tip, .warn, .note { border-radius: 8px; padding: 4px 7px; margin-top: 4px; font-size: 8.6pt; }
+  .tip { background: var(--ok-soft); color: #3f5d48; }
+  .warn { background: var(--warn-soft); color: #7a5822; }
+  .note { background: var(--info-soft); color: #3f5d75; }
+  .wide { grid-column: 1 / -1; }
+  .shot { display: flex; gap: 8px; align-items: flex-start; }
+  .shot img { width: 20mm; height: 33mm; object-fit: cover; object-position: top; border-radius: 7px; border: 1px solid var(--border); flex: none; }
+  .shot > div { min-width: 0; }
+  table { width: 100%; border-collapse: collapse; font-size: 8.6pt; margin-top: 3px; }
+  td, th { border: 1px solid var(--border); padding: 2px 5px; text-align: left; vertical-align: top; }
+  th { background: var(--surface-2); }
+  .section { margin: 7px 0 4px; font-size: 9pt; font-weight: 700; color: var(--text-2); letter-spacing: .06em; text-transform: uppercase; }
+  footer { margin-top: 5px; font-size: 8.2pt; color: var(--text-2); text-align: center; }
+  .pb { break-before: page; }
+</style>
+</head>
+<body>
+<div class="page">
+
+<header>
+  <div class="logo">DKT</div>
+  <div>
+    <h1>DKT Ofis · Kullanım Kılavuzu</h1>
+    <p>Danışan, randevu, seans notu, ödeme ve rapor işleriniz tek yerde. Kayıtlar yalnızca sizin cihazınızda, şifreli durur.</p>
+  </div>
+  <div class="url">Uygulama adresi<b>dkt-ofis.terapiofisi.workers.dev</b></div>
+</header>
+
+<div class="strip">
+  <div class="pill">➕ Eklemek: <b>+ Yeni</b> · 🔎 Aramak: <b>Ara</b> (Ctrl + K) · ❓ Takıldığınızda: <b>Menü → Yardım Merkezi</b></div>
+</div>
+
+<div class="section">1 · Başlarken</div>
+<div class="grid">
+  <div class="card shot">
+    <img src="01-giris.jpg" alt="İlk açılış ekranı">
+    <div>
+      <h2><span class="ic">🚀</span> İlk açılış</h2>
+      <ol>
+        <li>Adresi açın → <span class="btn">Başlayalım</span> → adınız → <span class="btn">Devam</span>.</li>
+        <li>Şifre ekranında seçin: <span class="btn">Şifreyi oluştur</span> (önerilen) veya <span class="btn">Şifresiz devam et</span>.</li>
+        <li>Şifre seçtiyseniz <b>kurtarma kodunu</b> kâğıda yazıp saklayın.</li>
+      </ol>
+      <div class="tip">💡 Şifreyi sonradan <b>Ayarlar → Güvenlik</b>'ten açıp kapatabilirsiniz; kayıtlar silinmez.</div>
+    </div>
+  </div>
+  <div class="card">
+    <h2><span class="ic">📱</span> Telefona ve bilgisayara ekleme</h2>
+    <table>
+      <tr><th>iPhone</th><td><b>Safari</b> → <span class="btn">Paylaş</span> → <span class="btn">Ana Ekrana Ekle</span> → <b>Web Uygulaması olarak aç</b> açık → <span class="btn">Ekle</span></td></tr>
+      <tr><th>Android</th><td><b>Chrome</b> → <span class="btn">⋮</span> → <span class="btn">Uygulamayı yükle</span></td></tr>
+      <tr><th>Bilgisayar</th><td>Chrome / Edge: adres çubuğundaki <b>yükle</b> simgesi. Mac Safari: <b>Dosya → Dock'a Ekle</b></td></tr>
+    </table>
+    <div class="note">📌 Hep ana ekrandaki <b>DKT Ofis</b> simgesinden açın. Telefon ve bilgisayar kayıtları ayrıdır (aktarma: Yedek bölümü).</div>
+  </div>
+</div>
+
+<div class="section">2 · Günlük iş ve ödemeler</div>
+<div class="grid">
+  <div class="card">
+    <h2><span class="ic">👤</span> Danışanlar</h2>
+    <span class="where">📍 Danışanlar → Yeni danışan</span>
+    <ul>
+      <li>Ad soyad yeterli; telefon WhatsApp mesajları içindir.</li>
+      <li>Düzenle: danışan dosyası → <span class="btn">⋯</span> → <span class="btn">Bilgileri düzenle</span></li>
+      <li>Gelmeyen danışan: <span class="btn">⋯</span> → <span class="btn">Arşivle</span> (hiçbir kayıt silinmez).</li>
+    </ul>
+  </div>
+  <div class="card shot">
+    <img src="04-danisan-dosyasi.jpg" alt="Danışan dosyası">
+    <div>
+      <h2><span class="ic">🗂️</span> Danışan dosyası</h2>
+      <p>Danışanın adına dokunun. Sekmeler: <b>Genel Bakış, Randevular, Seans Notları, Hedefler (BEP), Ev Çalışmaları, Formlar, Belgeler, Zaman Çizelgesi, Ödemeler, Paketler</b>.</p>
+      <div class="tip">💡 <b>Zaman Çizelgesi</b> seans, not, ölçüm, ödev ve ödemeyi tarih sırasıyla tek listede gösterir.</div>
+    </div>
+  </div>
+  <div class="card shot">
+    <img src="03-takvim.jpg" alt="Takvim gün görünümü">
+    <div>
+      <h2><span class="ic">📅</span> Takvim ve randevu</h2>
+      <span class="where">📍 Takvim · + Yeni → Randevu</span>
+      <ul>
+        <li><b>Oluştur:</b> boş saate dokunun, danışanı ve saati seçin. Tekrar için <b>Tekrar</b> bölümü.</li>
+        <li><b>Değiştir:</b> randevuya dokunun → <span class="btn">Düzenle</span> / <span class="btn">Taşı / Ertele</span></li>
+        <li><b>İptal / gelmedi:</b> <span class="btn">İptal et</span> · <span class="btn">Gelmedi</span> · Görünüm: <b>Gün · Hafta · Ay · Ajanda</b></li>
+      </ul>
+    </div>
+  </div>
+  <div class="card">
+    <h2><span class="ic">🕖</span> Çalışma saatleri</h2>
+    <span class="where">📍 Ayarlar → Çalışma saatleri ve müsaitlik</span>
+    <p>Haftanın <b>7 günü 07.00–21.00</b> açık. Boş saat önerileri, çakışma uyarıları ve tekrarlayan randevular bu saatlere göre çalışır.</p>
+    <ul>
+      <li>Her günün saatini ayrı değiştirin; kutuyu kaldırırsanız o gün kapalı olur.</li>
+      <li><span class="btn">Tüm açık günlere uygula</span> · <span class="btn">Haftanın 7 günü 07:00–21:00</span> → <span class="btn">Çalışma saatlerini kaydet</span></li>
+    </ul>
+    <div class="note">📌 Saat dışı randevu engellenmez, yalnızca uyarı çıkar. Tatil için <span class="btn">Zaman kapat</span>.</div>
+  </div>
+  <div class="card wide">
+    <h2><span class="ic">⏳</span> Bekleme listesi ve boş saat</h2>
+    <span class="where">📍 Menü → Bekleme Listesi</span>
+    <ul>
+      <li>Kişiyi, uygun gün ve saat tercihini yazın.</li>
+      <li>Boş saat açılınca <b>Genel Bakış</b>'ta uygun kişiler önerilir → <span class="btn">Eşleştir</span></li>
+      <li>Randevu formu da <b>önerilen boş saatleri</b> gösterir; birine dokunmanız yeterli.</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h2><span class="ic">💳</span> Ödeme, borç ve paket</h2>
+    <ul>
+      <li><b>Ödeme:</b> + Yeni → Ödeme (kısmi ödeme için alınan tutarı yazın).</li>
+      <li><b>Borçlar:</b> Ödemeler → <b>Açık alacaklar</b>; danışanın Genel Bakış'ı.</li>
+      <li><b>Paket:</b> Menü → Paketler → Yeni paket; her seansta 1 seans düşer.</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h2><span class="ic">📊</span> Gelir, gider ve raporlar</h2>
+    <ul>
+      <li><b>Gider:</b> + Yeni → Gider · her ay tekrarlayanlar <b>Gelir-Gider → Düzenli giderler</b>.</li>
+      <li><b>Raporlar:</b> tahsilat, gider, katılım ve <b>iptallerden kaybedilen gelir</b>.</li>
+      <li><b>Genel Bakış</b>'ta <b>Bu hafta / Bu ay</b> özeti.</li>
+    </ul>
+  </div>
+</div>
+
+<div class="section pb">3 · Seans notu, hedef ve ödev</div>
+<div class="grid">
+  <div class="card shot">
+    <img src="05-seans-notu.jpg" alt="Seans notu penceresi">
+    <div>
+      <h2><span class="ic">📝</span> Seans notu</h2>
+      <span class="where">📍 Bugün → Seans notu · Danışan → Seans Notları</span>
+      <ul>
+        <li>Seans bitince <b>Bugün</b> → <span class="btn">Tamamlandı</span> (ödemeyi de işaretleyin) → <b>Kaydettikten sonra seans notu yaz</b>.</li>
+        <li>Şablon: <b>Serbest not · SOAP · Kısa seans notu</b> veya kendiniz hazırlayın (<b>Menü → Not ve Form Şablonları</b>).</li>
+        <li>Yazdıkça <b>otomatik taslak</b> kaydedilir → bitince <span class="btn">Notu tamamla</span></li>
+        <li>Eski hâller <span class="btn">Sürümler</span>'de; silinen notlar <b>Silinenler</b>'den geri alınır.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="card">
+    <h2><span class="ic">🎙️</span> Konuşarak not yazma</h2>
+    <ol>
+      <li>Seans notunda <span class="btn">Konuşarak yaz</span> → konuşun. Metin imlecin olduğu yere eklenir.</li>
+      <li>“virgül”, “nokta”, “soru işareti”, “yeni satır” diyebilirsiniz.</li>
+      <li><span class="btn">Dinlemeyi durdur</span> → okuyun, düzeltin, kaydedin.</li>
+    </ol>
+    <div class="warn">⚠️ <b>“Ses cihazda işlenir”</b> yazmıyorsa ses, metne çevrilmek için Apple / Google / Microsoft'a gidebilir; ilk kullanımda sorulur. Danışan adı ve tanı söylemeyin. Uygulama ses kaydı saklamaz.</div>
+  </div>
+  <div class="card shot">
+    <img src="06-hedefler.jpg" alt="Hedef gelişim grafiği">
+    <div>
+      <h2><span class="ic">🎯</span> BEP ve gelişim takibi</h2>
+      <span class="where">📍 Danışan → Hedefler (BEP)</span>
+      <ol>
+        <li><span class="btn">Uzun vadeli amaç</span> → altına <span class="btn">Bu amaca hedef ekle</span> + ölçüt.</li>
+        <li><span class="btn">Ölçüm</span>: doğru / toplam deneme → yüzde kendiliğinden hesaplanır.</li>
+        <li><span class="btn">Gelişim</span>: grafik ve tüm ölçümler. Durum: devam ediyor · beklemede · tamamlandı.</li>
+      </ol>
+      <div class="tip">💡 Ölçümü seans notunun içinden de girebilirsiniz.</div>
+    </div>
+  </div>
+  <div class="card">
+    <h2><span class="ic">🏠</span> Ev çalışmaları</h2>
+    <span class="where">📍 Danışan → Ev Çalışmaları → Ev çalışması</span>
+    <ul>
+      <li>Başlık, açıklama, son tarih; isterseniz ilgili hedef.</li>
+      <li>Sonraki seansta <span class="btn">Tamamlandı</span> / <span class="btn">Tamamlanmadı</span>. Süresi geçen: <b>Gecikti</b>.</li>
+      <li>Geçmiş: <span class="btn">Tümü (geçmiş dahil)</span></li>
+    </ul>
+    <div class="note">📋 Kendi değerlendirme formlarınız: <b>Not ve Form Şablonları</b> → danışanda <b>Formlar</b>.</div>
+  </div>
+</div>
+
+<div class="section">4 · İletişim, hatırlatma, rapor ve yedek</div>
+<div class="grid">
+  <div class="card shot">
+    <img src="08-whatsapp.jpg" alt="WhatsApp mesaj penceresi">
+    <div>
+      <h2><span class="ic">💬</span> WhatsApp mesajı</h2>
+      <span class="where">📍 Randevu → Hatırlat · Danışan → Mesaj</span>
+      <ol>
+        <li>Şablonu seçin, metni düzeltin.</li>
+        <li><span class="btn">WhatsApp'ta aç</span> → WhatsApp yazılı açılır.</li>
+        <li><b>Gönder tuşuna siz basarsınız.</b></li>
+      </ol>
+      <div class="warn">⚠️ Otomatik gönderim yoktur. Mesaja tanı veya seans notu yazmayın.</div>
+    </div>
+  </div>
+  <div class="card">
+    <h2><span class="ic">🔔</span> Hatırlatma ve bildirim</h2>
+    <table>
+      <tr><th>Danışana</th><td>Randevu formunda <b>Danışana hatırlatma (WhatsApp)</b>; zamanı gelenler Genel Bakış'ta listelenir, siz gönderirsiniz.</td></tr>
+      <tr><th>Size</th><td><b>Ayarlar → Bildirimler</b>: zaman seçin (ör. 1 gün, 2 saat önce) → <span class="btn">Cihaz bildirimlerine izin ver</span></td></tr>
+    </table>
+    <div class="note">📌 Bildirimler <b>uygulama açıkken</b> gelir. Kapalıyken hatırlatma için <span class="btn">Önümüzdeki 60 günü telefon takvimine aktar</span>; randevu değişirse yeniden aktarın.</div>
+  </div>
+  <div class="card">
+    <h2><span class="ic">📄</span> PDF, CSV ve belgeler</h2>
+    <ul>
+      <li><b>PDF:</b> seans notunda <span class="btn">PDF</span> · Seans Notları / Hedefler'de <span class="btn">PDF</span> · danışan <span class="btn">⋯</span> → <b>Danışan dosyası (PDF)</b> · Raporlar → <span class="btn">Gelir-gider PDF</span></li>
+      <li>Açılan sayfada <span class="btn">PDF olarak kaydet / yazdır</span> → <b>PDF olarak kaydet</b>.</li>
+      <li><b>CSV:</b> Yedekleme → CSV olarak dışa aktar.</li>
+      <li><b>Belge / fotoğraf:</b> danışan → Belgeler → <span class="btn">Dosya ekle</span> (en fazla 10 MB).</li>
+    </ul>
+    <div class="warn">⚠️ PDF ve CSV dosyaları şifresizdir; paylaşmayın.</div>
+  </div>
+  <div class="card">
+    <h2><span class="ic">💾</span> Yedek ve internetsiz kullanım</h2>
+    <span class="where">📍 Menü → Yedekleme</span>
+    <ol>
+      <li><span class="btn">Yedek dosyasını indir</span> (telefonda <span class="btn">Paylaş / Dosyalar'a kaydet</span>) → iCloud, Drive veya USB'ye kaydedin. <b>Haftada bir.</b></li>
+      <li>Geri yükle / başka cihaza taşı: önce o cihazda yedek alın → <span class="btn">Yedek dosyası seç</span> → <b>Tamamen değiştir</b> veya <b>Birleştir</b>.</li>
+    </ol>
+    <div class="tip">💡 Bir kez açıldıktan sonra internetsiz çalışır (WhatsApp hariç).</div>
+  </div>
+  <div class="card wide">
+    <h2><span class="ic">🔒</span> Gizlilik ve güvenlik</h2>
+    <ul>
+      <li>Kayıtlar <b>yalnızca bu cihazda, şifreli</b> durur; sunucuya veya yapay zekâya gönderilmez. Uygulama kameraya, konuma, rehbere erişmez; mikrofonu yalnızca <b>Konuşarak yaz</b>'a basınca kullanır.</li>
+      <li><b>Şifreli kullanım</b> ve ekran kilidi önerilir; şifre + kurtarma kodu birlikte kaybolursa yalnızca yedek kurtarır. Gerçek veriden önce KVKK için hukuki görüş alın.</li>
+    </ul>
+  </div>
+</div>
+
+<footer>DKT Ofis · Ekran görüntüleri hayali örnek verilerle alınmıştır · Ayrıntılı adımlar: uygulamada <b>Menü → Yardım Merkezi</b></footer>
+</div>
+</body>
+</html>
